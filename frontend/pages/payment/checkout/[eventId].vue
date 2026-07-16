@@ -1,0 +1,164 @@
+<template>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow">
+      <div class="container mx-auto px-4 py-6">
+        <NuxtLink to="/" class="text-2xl font-bold text-primary">
+          EventHub Ethiopia
+        </NuxtLink>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-2xl">
+      <div v-if="loadingEvent" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+
+      <div v-else-if="event" class="bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6">Checkout</h1>
+
+        <!-- Event Summary -->
+        <div class="border-b pb-6 mb-6">
+          <h2 class="text-xl font-semibold mb-4">{{ event.title }}</h2>
+          <p class="text-gray-600 mb-2">{{ formatDate(event.event_date) }}</p>
+          <p class="text-gray-600">{{ event.venue }}</p>
+        </div>
+
+        <!-- Quantity Selection -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Number of Tickets
+          </label>
+          <input
+            v-model.number="quantity"
+            type="number"
+            min="1"
+            max="10"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <!-- Price Summary -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <div class="flex justify-between mb-2">
+            <span>Price per ticket</span>
+            <span class="font-semibold">{{ formatPrice(event.price) }} ETB</span>
+          </div>
+          <div class="flex justify-between mb-2">
+            <span>Quantity</span>
+            <span class="font-semibold">{{ quantity }}</span>
+          </div>
+          <div class="border-t pt-2 flex justify-between">
+            <span class="font-bold">Total</span>
+            <span class="font-bold text-xl text-primary">
+              {{ formatPrice(totalPrice) }} ETB
+            </span>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div v-if="error" class="mb-6 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+          {{ error }}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+          <button
+            @click="handlePayment"
+            :disabled="loading"
+            class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition disabled:opacity-50"
+          >
+            {{ loading ? 'Processing...' : 'Pay with Chapa' }}
+          </button>
+          <button
+            @click="$router.back()"
+            class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useQuery } from '@vue/apollo-composable'
+import { gql } from '@apollo/client/core'
+
+definePageMeta({
+  middleware: 'auth'
+})
+
+const route = useRoute()
+const config = useRuntimeConfig()
+const eventId = route.params.eventId
+
+const GET_EVENT = gql`
+  query GetEvent($id: uuid!) {
+    events_by_pk(id: $id) {
+      id
+      title
+      venue
+      event_date
+      price
+    }
+  }
+`
+
+const { result, loading: loadingEvent } = useQuery(GET_EVENT, { id: eventId })
+const event = computed(() => result.value?.events_by_pk)
+
+const quantity = ref(1)
+const loading = ref(false)
+const error = ref('')
+
+const totalPrice = computed(() => {
+  return (event.value?.price || 0) * quantity.value
+})
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-ET').format(price)
+}
+
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString('en-ET', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+const handlePayment = async () => {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const response = await $fetch(`${config.public.backendUrl}/actions/initiate-payment`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${useCookie('auth_token').value}`,
+      },
+      body: {
+        input: {
+          event_id: eventId,
+          quantity: quantity.value,
+        },
+        session_variables: {
+          'x-hasura-user-id': useAuth().user.value?.id,
+        },
+      },
+    })
+
+    if (response.checkout_url) {
+      // Redirect to Chapa payment page
+      window.location.href = response.checkout_url
+    }
+  } catch (err: any) {
+    error.value = err.data?.error || 'Failed to initialize payment'
+  } finally {
+    loading.value = false
+  }
+}
+</script>

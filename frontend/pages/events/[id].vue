@@ -98,15 +98,39 @@
           <!-- Action Buttons -->
           <div class="flex gap-4">
             <NuxtLink 
+              v-if="!isAuthenticated"
               to="/auth/login"
               class="flex-1 bg-primary text-white text-center py-3 rounded-lg font-semibold hover:bg-primary-dark transition"
             >
               Get Tickets
             </NuxtLink>
-            <button class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button
+              v-else
+              @click="handleBuyTicket"
+              class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition"
+            >
+              Get Tickets
+            </button>
+            
+            <button 
+              @click="toggleBookmark"
+              class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              :class="{ 'bg-yellow-50 border-yellow-500': isBookmarked }"
+            >
+              <svg class="w-6 h-6" :class="{ 'fill-yellow-500': isBookmarked }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
+            
+            <button
+              @click="toggleFollow"
+              class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              :class="{ 'bg-red-50 border-red-500': isFollowing }"
+            >
+              <svg class="w-6 h-6" :class="{ 'fill-red-500': isFollowing }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
           </div>
@@ -126,6 +150,9 @@ import { gql } from '@apollo/client/core'
 
 const route = useRoute()
 const eventId = route.params.id
+
+const { isAuthenticated } = useAuth()
+const { isBookmarked, isFollowing, toggleBookmark, toggleFollow } = useEventInteractions(eventId as string)
 
 const GET_EVENT = gql`
   query GetEvent($id: uuid!) {
@@ -178,5 +205,9 @@ const formatDate = (date: string) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const handleBuyTicket = () => {
+  navigateTo(`/payment/checkout/${eventId}`)
 }
 </script>

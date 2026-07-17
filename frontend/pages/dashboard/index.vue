@@ -38,9 +38,7 @@
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <LoadingSpinner v-if="loading" />
 
       <!-- Empty State -->
       <div v-else-if="myEvents.length === 0" class="text-center py-12">
@@ -59,11 +57,16 @@
       </div>
 
       <!-- Events List -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <transition-group
+        v-else
+        name="stagger"
+        tag="div"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <div
           v-for="event in myEvents"
           :key="event.id"
-          class="bg-white rounded-lg shadow-md overflow-hidden"
+          class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
         >
           <!-- Image -->
           <div class="relative h-48">
@@ -210,3 +213,28 @@ const handleDelete = async () => {
   }
 }
 </script>
+
+<style scoped>
+.stagger-move {
+  transition: transform 0.3s ease;
+}
+
+.stagger-enter-active {
+  transition: all 0.3s ease;
+}
+
+.stagger-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.stagger-leave-active {
+  transition: all 0.3s ease;
+  position: absolute;
+}
+
+.stagger-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+</style>

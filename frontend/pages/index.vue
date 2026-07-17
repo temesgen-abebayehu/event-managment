@@ -67,30 +67,36 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p class="mt-4 text-gray-600">Loading events...</p>
-      </div>
+      <transition name="fade" mode="out-in">
+        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <EventCardSkeleton v-for="n in 6" :key="n" />
+        </div>
 
-      <!-- Grid View -->
-      <div v-else-if="viewMode === 'grid'">
+        <!-- Grid View -->
+        <div v-else-if="viewMode === 'grid'">
         <div v-if="displayEvents.length === 0" class="text-center py-12">
           <p class="text-gray-600">No events found matching your criteria</p>
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <EventCard v-for="event in displayEvents" :key="event.id" :event="event" />
+          <transition-group
+            v-else
+            name="stagger"
+            tag="div"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <EventCard v-for="event in displayEvents" :key="event.id" :event="event" />
+          </transition-group>
         </div>
-      </div>
 
-      <!-- Map View -->
-      <div v-else-if="viewMode === 'map'">
-        <ClientOnly>
-          <EventMap 
-            :events="displayEvents" 
-            @marker-click="handleMarkerClick"
-          />
-        </ClientOnly>
-      </div>
+        <!-- Map View -->
+        <div v-else-if="viewMode === 'map'">
+          <ClientOnly>
+            <EventMap 
+              :events="displayEvents" 
+              @marker-click="handleMarkerClick"
+            />
+          </ClientOnly>
+        </div>
+      </transition>
 
       <!-- Pagination -->
       <div v-if="totalCount > pageSize" class="mt-8 flex justify-center gap-2">
@@ -150,3 +156,28 @@ const handleMarkerClick = (event: any) => {
   navigateTo(`/events/${event.id}`)
 }
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.stagger-move {
+  transition: transform 0.3s ease;
+}
+
+.stagger-enter-active {
+  transition: all 0.3s ease;
+}
+
+.stagger-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+</style>

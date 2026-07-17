@@ -49,6 +49,20 @@
         {{ event.description }}
       </p>
 
+      <!-- Tags -->
+      <div v-if="event.event_tags && event.event_tags.length > 0" class="flex flex-wrap gap-1 mb-3">
+        <span
+          v-for="eventTag in event.event_tags.slice(0, 3)"
+          :key="eventTag.tag.id"
+          class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+        >
+          #{{ eventTag.tag.name }}
+        </span>
+        <span v-if="event.event_tags.length > 3" class="text-xs text-gray-500">
+          +{{ event.event_tags.length - 3 }} more
+        </span>
+      </div>
+
       <!-- Location & Stats -->
       <div class="flex items-center justify-between pt-3 border-t border-gray-100">
         <div class="flex items-center gap-1 text-gray-500 text-sm">

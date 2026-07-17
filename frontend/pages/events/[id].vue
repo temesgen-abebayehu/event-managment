@@ -78,6 +78,20 @@
             </p>
           </div>
 
+          <!-- Tags -->
+          <div v-if="event.event_tags && event.event_tags.length > 0" class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Tags</h3>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="eventTag in event.event_tags"
+                :key="eventTag.tag.id"
+                class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+              >
+                #{{ eventTag.tag.name }}
+              </span>
+            </div>
+          </div>
+
           <!-- Description -->
           <div class="mb-6">
             <h2 class="text-2xl font-semibold mb-3">About this event</h2>
@@ -175,6 +189,12 @@ const GET_EVENT = gql`
       event_images {
         url
         is_featured
+      }
+      event_tags {
+        tag {
+          id
+          name
+        }
       }
       user {
         full_name

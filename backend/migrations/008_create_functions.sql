@@ -28,14 +28,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function: Search events
+-- Function: Search events with tags support
 CREATE OR REPLACE FUNCTION search_events(search_term TEXT)
 RETURNS SETOF events AS $$
 BEGIN
     RETURN QUERY
-    SELECT e.*
+    SELECT DISTINCT e.*
     FROM events e
-    WHERE e.search_vector @@ plainto_tsquery('english', search_term)
+    LEFT JOIN event_tags et ON e.id = et.event_id
+    LEFT JOIN tags t ON et.tag_id = t.id
+    WHERE 
+        e.search_vector @@ plainto_tsquery('english', search_term)
+        OR t.name ILIKE '%' || search_term || '%'
     ORDER BY ts_rank(e.search_vector, plainto_tsquery('english', search_term)) DESC;
 END;
 $$ LANGUAGE plpgsql STABLE;

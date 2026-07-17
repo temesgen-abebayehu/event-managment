@@ -31,6 +31,12 @@ export const GET_EVENTS = gql`
       event_images(where: { is_featured: { _eq: true } }, limit: 1) {
         url
       }
+      event_tags {
+        tag {
+          id
+          name
+        }
+      }
       user {
         full_name
       }
@@ -59,6 +65,12 @@ export const SEARCH_EVENTS = gql`
       }
       event_images(where: { is_featured: { _eq: true } }, limit: 1) {
         url
+      }
+      event_tags {
+        tag {
+          id
+          name
+        }
       }
     }
   }

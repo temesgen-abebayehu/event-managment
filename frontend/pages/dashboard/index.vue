@@ -1,32 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/" class="text-2xl font-bold text-primary">
-            EventHub Ethiopia
-          </NuxtLink>
-          <div class="flex items-center gap-4">
-            <NuxtLink to="/dashboard/bookmarks" class="text-gray-600 hover:text-primary">
-              Bookmarks
-            </NuxtLink>
-            <NuxtLink to="/dashboard/follows" class="text-gray-600 hover:text-primary">
-              Following
-            </NuxtLink>
-            <NuxtLink to="/dashboard/tickets" class="text-gray-600 hover:text-primary">
-              Tickets
-            </NuxtLink>
-            <span class="text-gray-600">{{ user?.full_name }}</span>
-            <button @click="logout" class="text-gray-600 hover:text-primary">
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8">
+  <div>
+    <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">My Events</h1>
         <NuxtLink
@@ -106,8 +80,8 @@
             </div>
           </div>
         </div>
-      </div>
-    </main>
+      </transition-group>
+    </div>
 
     <!-- Delete Confirmation Modal -->
     <div
@@ -148,7 +122,10 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { user, logout } = useAuth()
+useHead({ title: 'My Events' })
+
+const { user } = useAuth()
+const { error: showError, success: showSuccess } = useToast()
 
 // GraphQL Queries
 const MY_EVENTS = gql`
@@ -205,9 +182,10 @@ const handleDelete = async () => {
     await deleteEventMutation({ id: eventToDelete.value.id })
     showDeleteModal.value = false
     eventToDelete.value = null
+    showSuccess('Event deleted successfully')
     refetch()
   } catch (error) {
-    console.error('Failed to delete event:', error)
+    showError('Failed to delete event. Please try again.')
   } finally {
     deleting.value = false
   }

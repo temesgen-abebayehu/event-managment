@@ -1,0 +1,7 @@
+#local
+.kiro
+
+# Local env files
+.env
+.env.*
+!.env.example

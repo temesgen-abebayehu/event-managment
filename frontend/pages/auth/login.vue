@@ -76,6 +76,12 @@ import * as yup from 'yup'
 const config = useRuntimeConfig()
 const { setAuth } = useAuth()
 
+definePageMeta({
+  layout: 'blank'
+})
+
+useHead({ title: 'Login' })
+
 const schema = yup.object({
   email: yup.string().required('Email is required').email('Invalid email address'),
   password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),

@@ -1,22 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <h1 class="text-3xl font-bold text-primary">EventHub Ethiopia</h1>
-          <nav class="flex gap-4">
-            <NuxtLink to="/auth/login" class="text-gray-600 hover:text-primary">
-              Login
-            </NuxtLink>
-            <NuxtLink to="/auth/signup" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark">
-              Sign Up
-            </NuxtLink>
-          </nav>
-        </div>
-      </div>
-    </header>
-
+  <div>
     <!-- Hero Section -->
     <section class="bg-gradient-to-r from-primary to-primary-dark text-white py-16">
       <div class="container mx-auto px-4 text-center">
@@ -30,7 +13,7 @@
     </section>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8">
       <!-- Search & Filters -->
       <SearchFilters 
         @update:filters="handleFiltersUpdate" 
@@ -68,7 +51,7 @@
 
       <!-- Loading State -->
       <transition name="fade" mode="out-in">
-        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <EventCardSkeleton v-for="n in 6" :key="n" />
         </div>
 
@@ -110,18 +93,13 @@
           {{ page }}
         </button>
       </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-16">
-      <div class="container mx-auto px-4 text-center">
-        <p>&copy; 2024 EventHub Ethiopia. All rights reserved.</p>
-      </div>
-    </footer>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+useHead({ title: 'Discover Events' })
+
 const viewMode = ref<'grid' | 'map'>('grid')
 const currentPage = ref(1)
 const pageSize = 12
@@ -134,12 +112,23 @@ const filters = computed(() => ({
   offset: (currentPage.value - 1) * pageSize,
 }))
 
-// Use events or search based on search query
-const { events, totalCount, loading } = searchQuery.value 
-  ? useSearchEvents(searchQuery)
-  : useEvents(filters)
+// Always call both composables (Vue composables must not be called conditionally)
+const { events: filteredEvents, totalCount, loading: eventsLoading } = useEvents(filters)
+const { events: searchResults, loading: searchLoading } = useSearchEvents(searchQuery)
 
-const displayEvents = computed(() => events.value || [])
+// Reactively switch between search results and filtered events
+const displayEvents = computed(() => {
+  if (searchQuery.value.length > 0) {
+    return searchResults.value || []
+  }
+  return filteredEvents.value || []
+})
+
+const isLoading = computed(() => {
+  if (searchQuery.value.length > 0) return searchLoading.value
+  return eventsLoading.value
+})
+
 const totalPages = computed(() => Math.ceil(totalCount.value / pageSize))
 
 const handleFiltersUpdate = (newFilters: any) => {

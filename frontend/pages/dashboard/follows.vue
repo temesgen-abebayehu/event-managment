@@ -1,28 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/" class="text-2xl font-bold text-primary">
-            EventHub Ethiopia
-          </NuxtLink>
-          <div class="flex items-center gap-4">
-            <NuxtLink to="/dashboard" class="text-gray-600 hover:text-primary">
-              My Events
-            </NuxtLink>
-            <NuxtLink to="/dashboard/bookmarks" class="text-gray-600 hover:text-primary">
-              Bookmarks
-            </NuxtLink>
-            <button @click="logout" class="text-gray-600 hover:text-primary">
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8">
+  <div>
+    <div class="container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold mb-6">Following</h1>
 
       <!-- Loading -->
@@ -47,7 +25,7 @@
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <EventCard v-for="follow in followedEvents" :key="follow.event.id" :event="follow.event" />
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -59,7 +37,9 @@ definePageMeta({
   middleware: 'auth'
 })
 
-const { user, logout } = useAuth()
+useHead({ title: 'Following' })
+
+const { user } = useAuth()
 
 const { result, loading } = useQuery(GET_USER_FOLLOWS, { user_id: user.value?.id })
 const followedEvents = computed(() => result.value?.follows || [])

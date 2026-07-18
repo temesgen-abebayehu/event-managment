@@ -1,14 +1,18 @@
+import { defineNuxtConfig } from "nuxt/config";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+  ssr: false,
 
   modules: ['@nuxtjs/tailwindcss'],
 
   runtimeConfig: {
     public: {
-      backendUrl: process.env.BACKEND_URL || 'http://localhost:3001',
-      hasuraUrl: process.env.HASURA_GRAPHQL_URL || 'http://localhost:8080/v1/graphql',
+      backendUrl: 'http://localhost:3001',
+      hasuraUrl: 'http://localhost:8080/v1/graphql',
+      graphqlEndpoint: 'http://localhost:8080/v1/graphql',
     },
   },
 
@@ -34,6 +38,12 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   build: {
-    transpile: ['@vue/apollo-composable', '@apollo/client'],
+    transpile: ['@vue/apollo-composable', '@apollo/client', 'tslib'],
+  },
+
+  nitro: {
+    externals: {
+      inline: ['tslib'],
+    },
   },
 })

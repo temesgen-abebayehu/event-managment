@@ -1,0 +1,37 @@
+# Ignore everything
+*
+
+# Allow specific files
+!go.mod
+!go.sum
+!cmd/
+!config/
+!delivery/
+!domain/
+!infrastructure/
+!repository/
+!usecase/
+!utils/
+
+# Ignore env files (use env vars instead)
+.env
+.env.*
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore docs
+*.md
+README.md
+
+# Ignore test files
+*_test.go
+
+# Ignore build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+bin/
+dist/

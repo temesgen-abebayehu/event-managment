@@ -36,6 +36,9 @@
 
 <script setup lang="ts">
 definePageMeta({
+  layout: 'blank',
   middleware: 'auth'
 })
+
+useHead({ title: 'Payment Successful' })
 </script>

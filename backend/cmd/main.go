@@ -37,15 +37,18 @@ func main() {
 	// Initialize usecases
 	authUsecase := usecase.NewAuthUsecase(userRepo, cfg.JWTSecret)
 	uploadUsecase := usecase.NewUploadUsecase(cloudinaryClient)
-	paymentUsecase := usecase.NewPaymentUsecase(ticketRepo, orderRepo, chapaClient, cfg.ChapaCallbackURL, cfg.ChapaReturnURL)
+	paymentUsecase := usecase.NewPaymentUsecase(ticketRepo, orderRepo, userRepo, chapaClient, cfg.ChapaCallbackURL, cfg.ChapaReturnURL)
 
 	// Initialize handlers
 	authHandler := delivery.NewAuthHandler(authUsecase)
-	uploadHandler := delivery.NewUploadHandler(uploadUsecase)
+	uploadHandler := delivery.NewUploadHandler(uploadUsecase, cfg.JWTSecret)
 	paymentHandler := delivery.NewPaymentHandler(paymentUsecase)
 
 	// Setup routes
 	r := mux.NewRouter()
+
+	// Apply CORS middleware
+	r.Use(corsMiddleware)
 	
 	// Health check
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -54,16 +57,16 @@ func main() {
 	}).Methods("GET")
 	
 	// Auth actions
-	r.HandleFunc("/actions/signup", authHandler.Signup).Methods("POST")
-	r.HandleFunc("/actions/login", authHandler.Login).Methods("POST")
+	r.HandleFunc("/actions/signup", authHandler.Signup).Methods("POST", "OPTIONS")
+	r.HandleFunc("/actions/login", authHandler.Login).Methods("POST", "OPTIONS")
 	
 	// Upload actions
-	r.HandleFunc("/actions/upload", uploadHandler.UploadFiles).Methods("POST")
-	r.HandleFunc("/actions/delete-files", uploadHandler.DeleteFiles).Methods("POST")
+	r.HandleFunc("/actions/upload", uploadHandler.UploadFiles).Methods("POST", "OPTIONS")
+	r.HandleFunc("/actions/delete-files", uploadHandler.DeleteFiles).Methods("POST", "OPTIONS")
 	
 	// Payment actions
-	r.HandleFunc("/actions/initiate-payment", paymentHandler.InitiatePayment).Methods("POST")
-	r.HandleFunc("/actions/verify-payment", paymentHandler.VerifyPayment).Methods("POST")
+	r.HandleFunc("/actions/initiate-payment", paymentHandler.InitiatePayment).Methods("POST", "OPTIONS")
+	r.HandleFunc("/actions/verify-payment", paymentHandler.VerifyPayment).Methods("POST", "OPTIONS")
 	
 	// Chapa callback
 	r.HandleFunc("/webhook/chapa", paymentHandler.PaymentCallback).Methods("POST")
@@ -72,4 +75,30 @@ func main() {
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Server starting on port %s", cfg.Port)
 	log.Fatal(http.ListenAndServe(addr, r))
+}
+
+// corsMiddleware adds CORS headers so the frontend can reach the backend.
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow requests from common frontend origins
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		// Handle preflight OPTIONS requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

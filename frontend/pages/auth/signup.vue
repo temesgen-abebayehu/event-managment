@@ -107,6 +107,12 @@ import * as yup from 'yup'
 const config = useRuntimeConfig()
 const { setAuth } = useAuth()
 
+definePageMeta({
+  layout: 'blank'
+})
+
+useHead({ title: 'Sign Up' })
+
 const schema = yup.object({
   fullName: yup.string().required('Full name is required').min(2, 'Name must be at least 2 characters'),
   email: yup.string().required('Email is required').email('Invalid email address'),

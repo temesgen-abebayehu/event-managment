@@ -1,26 +1,15 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/dashboard" class="text-2xl font-bold text-primary">
-            EventHub Ethiopia
-          </NuxtLink>
-          <button @click="$router.back()" class="text-gray-600 hover:text-primary">
-            ← Back
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8 max-w-3xl">
+  <div>
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
       <div v-if="loadingEvent" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
 
       <div v-else-if="event">
-        <h1 class="text-3xl font-bold mb-8">Edit Event</h1>
+        <div class="flex items-center justify-between mb-8">
+          <h1 class="text-3xl font-bold">Edit Event</h1>
+          <button @click="$router.back()" class="text-gray-600 hover:text-primary text-sm font-medium">← Back</button>
+        </div>
 
         <form @submit.prevent="handleSubmit" class="bg-white rounded-lg shadow-lg p-8">
           <!-- Title -->
@@ -182,7 +171,7 @@
           </div>
         </form>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -193,6 +182,8 @@ import { gql } from '@apollo/client/core'
 definePageMeta({
   middleware: 'auth'
 })
+
+useHead({ title: 'Edit Event' })
 
 const route = useRoute()
 const eventId = route.params.id

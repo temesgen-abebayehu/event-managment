@@ -6,31 +6,35 @@ import (
 	"event-management-backend/infrastructure/chapa"
 	"event-management-backend/repository"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type PaymentUsecase struct {
-	ticketRepo   *repository.TicketRepository
-	orderRepo    *repository.OrderRepository
-	chapaClient  *chapa.Client
-	callbackURL  string
-	returnURL    string
+	ticketRepo  *repository.TicketRepository
+	orderRepo   *repository.OrderRepository
+	userRepo    *repository.UserRepository
+	chapaClient *chapa.Client
+	callbackURL string
+	returnURL   string
 }
 
 func NewPaymentUsecase(
 	ticketRepo *repository.TicketRepository,
 	orderRepo *repository.OrderRepository,
+	userRepo *repository.UserRepository,
 	chapaClient *chapa.Client,
 	callbackURL, returnURL string,
 ) *PaymentUsecase {
 	return &PaymentUsecase{
-		ticketRepo:   ticketRepo,
-		orderRepo:    orderRepo,
-		chapaClient:  chapaClient,
-		callbackURL:  callbackURL,
-		returnURL:    returnURL,
+		ticketRepo:  ticketRepo,
+		orderRepo:   orderRepo,
+		userRepo:    userRepo,
+		chapaClient: chapaClient,
+		callbackURL: callbackURL,
+		returnURL:   returnURL,
 	}
 }
 
@@ -38,6 +42,12 @@ func (u *PaymentUsecase) InitiatePayment(userID string, req domain.InitiatePayme
 	// Validate
 	if req.Quantity < 1 {
 		return nil, errors.New("quantity must be at least 1")
+	}
+
+	// Get the authenticated user's real info for Chapa
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, errors.New("user not found")
 	}
 
 	// Get ticket info
@@ -64,13 +74,16 @@ func (u *PaymentUsecase) InitiatePayment(userID string, req domain.InitiatePayme
 		return nil, errors.New("failed to create order")
 	}
 
-	// Initialize Chapa payment
+	// Split full_name into first/last for Chapa
+	firstName, lastName := splitName(user.FullName)
+
+	// Initialize Chapa payment with real user data
 	chapaReq := chapa.InitializePaymentRequest{
 		Amount:      fmt.Sprintf("%.2f", totalPrice),
 		Currency:    "ETB",
-		Email:       "user@example.com", // TODO: Get from user
-		FirstName:   "User",             // TODO: Get from user
-		LastName:    "Name",             // TODO: Get from user
+		Email:       user.Email,
+		FirstName:   firstName,
+		LastName:    lastName,
 		TxRef:       txRef,
 		CallbackURL: u.callbackURL,
 		ReturnURL:   u.returnURL,
@@ -131,4 +144,16 @@ func (u *PaymentUsecase) HandleCallback(txRef, status string) error {
 	}
 
 	return u.orderRepo.UpdateStatus(txRef, orderStatus)
+}
+
+// splitName splits "John Doe" into ("John", "Doe"). If only one name, uses "." as last name.
+func splitName(fullName string) (string, string) {
+	parts := strings.Fields(fullName)
+	if len(parts) == 0 {
+		return "User", "."
+	}
+	if len(parts) == 1 {
+		return parts[0], "."
+	}
+	return parts[0], strings.Join(parts[1:], " ")
 }

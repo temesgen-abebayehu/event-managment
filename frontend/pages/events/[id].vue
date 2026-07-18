@@ -1,20 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/" class="text-2xl font-bold text-primary">
-            EventHub Ethiopia
-          </NuxtLink>
-          <button @click="$router.back()" class="text-gray-600 hover:text-primary">
-            ← Back
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8">
+  <div>
+    <div class="container mx-auto px-4 py-8">
       <div v-if="loading" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
@@ -154,7 +140,7 @@
       <div v-else class="text-center py-12">
         <p class="text-gray-600">Event not found</p>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -210,6 +196,11 @@ const featuredImage = computed(() => {
   const images = event.value?.event_images || []
   const featured = images.find((img: any) => img.is_featured)
   return featured?.url || images[0]?.url || null
+})
+
+// Dynamic page title based on event name
+useHead({
+  title: computed(() => event.value?.title || 'Event Details'),
 })
 
 const formatPrice = (price: number) => {

@@ -1,12 +1,14 @@
 <template>
   <div>
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
     <ToastContainer />
   </div>
 </template>
 
 <script setup lang="ts">
-// Global page transitions
+// Global page transitions and title template
 useHead({
   titleTemplate: (titleChunk) => {
     return titleChunk ? `${titleChunk} - EventHub Ethiopia` : 'EventHub Ethiopia'

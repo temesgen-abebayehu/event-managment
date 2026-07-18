@@ -9,6 +9,7 @@ import {
 
 export const useEventInteractions = (eventId: string) => {
   const { user, isAuthenticated } = useAuth()
+  const { error: showError } = useToast()
 
   // Check if user has bookmarked/followed
   const { result, refetch } = useQuery(
@@ -48,7 +49,7 @@ export const useEventInteractions = (eventId: string) => {
       }
       refetch()
     } catch (error) {
-      console.error('Failed to toggle bookmark:', error)
+      showError('Failed to update bookmark. Please try again.')
     }
   }
 
@@ -66,7 +67,7 @@ export const useEventInteractions = (eventId: string) => {
       }
       refetch()
     } catch (error) {
-      console.error('Failed to toggle follow:', error)
+      showError('Failed to update follow. Please try again.')
     }
   }
 

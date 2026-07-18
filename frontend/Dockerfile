@@ -1,12 +1,12 @@
-FROM node:24-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install --ignore-scripts
 COPY . .
-RUN npm run build
+RUN npx nuxt prepare && npm run build
 
-FROM node:24-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY --from=builder /app/.output ./.output
 EXPOSE 3000

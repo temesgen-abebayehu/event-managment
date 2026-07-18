@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"event-management-backend/domain"
 	"event-management-backend/infrastructure/hasura"
 )
@@ -67,4 +68,32 @@ func (r *UserRepository) FindByEmail(email string) (*domain.User, string, error)
 
 	user := result.Users[0]
 	return &user.User, user.PasswordHash, nil
+}
+
+// FindByID - Used by payment usecase to get real user info
+func (r *UserRepository) FindByID(id string) (*domain.User, error) {
+	query := `
+		query($id: uuid!) {
+			users_by_pk(id: $id) {
+				id email full_name phone avatar_url created_at updated_at
+			}
+		}
+	`
+
+	variables := map[string]interface{}{"id": id}
+
+	var result struct {
+		UsersByPk *domain.User `json:"users_by_pk"`
+	}
+
+	err := r.hasura.Mutate(query, variables, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.UsersByPk == nil {
+		return nil, errors.New("user not found")
+	}
+
+	return result.UsersByPk, nil
 }

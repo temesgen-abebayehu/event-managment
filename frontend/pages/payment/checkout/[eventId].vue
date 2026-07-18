@@ -1,15 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <NuxtLink to="/" class="text-2xl font-bold text-primary">
-          EventHub Ethiopia
-        </NuxtLink>
-      </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8 max-w-2xl">
+  <div>
+    <div class="container mx-auto px-4 py-8 max-w-2xl">
       <div v-if="loadingEvent" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
@@ -78,7 +69,7 @@
           </button>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -89,6 +80,8 @@ import { gql } from '@apollo/client/core'
 definePageMeta({
   middleware: 'auth'
 })
+
+useHead({ title: 'Checkout' })
 
 const route = useRoute()
 const config = useRuntimeConfig()

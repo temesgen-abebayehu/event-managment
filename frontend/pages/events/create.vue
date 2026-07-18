@@ -1,21 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/dashboard" class="text-2xl font-bold text-primary">
-            EventHub Ethiopia
-          </NuxtLink>
-          <button @click="$router.back()" class="text-gray-600 hover:text-primary">
-            ← Back
-          </button>
-        </div>
+  <div>
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold">Create New Event</h1>
+        <button @click="$router.back()" class="text-gray-600 hover:text-primary text-sm font-medium">← Back</button>
       </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8 max-w-3xl">
-      <h1 class="text-3xl font-bold mb-8">Create New Event</h1>
 
       <form @submit="onSubmit" class="bg-white rounded-lg shadow-lg p-8">
         <!-- Title -->
@@ -184,7 +173,7 @@
           </button>
         </div>
       </form>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -197,6 +186,8 @@ import * as yup from 'yup'
 definePageMeta({
   middleware: 'auth'
 })
+
+useHead({ title: 'Create Event' })
 
 const config = useRuntimeConfig()
 const { user } = useAuth()
@@ -281,11 +272,13 @@ const onSubmit = handleSubmit(async (values) => {
     selectedFiles.value.forEach(file => {
       formData.append('files', file)
     })
-    formData.append('user_id', user.value.id)
     formData.append('event_id', 'temp')
 
     const uploadResponse = await $fetch(`${config.public.backendUrl}/actions/upload`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${useCookie('auth_token').value}`,
+      },
       body: formData,
     })
 

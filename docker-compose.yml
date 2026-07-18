@@ -11,6 +11,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d events_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   hasura:
     image: hasura/graphql-engine:v2.43.0
@@ -22,10 +28,11 @@ services:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/events_db
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:-myadminsecretkey}
-      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"${JWT_SECRET:-mnsjaskeiskaisjeaiekkancjJSKKSIEIjsiwurwi}"}'
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"${JWT_SECRET}"}'
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   backend:
     build: ./backend
@@ -40,13 +47,22 @@ services:
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       CHAPA_SECRET_KEY: ${CHAPA_SECRET_KEY}
       CHAPA_PUBLIC_KEY: ${CHAPA_PUBLIC_KEY}
-      JWT_SECRET: ${JWT_SECRET:-mnsjaskeiskaisjeaiekkancjJSKKSIEIjsiwurwi}
+      CHAPA_CALLBACK_URL: ${CHAPA_CALLBACK_URL:-http://localhost:3001/webhook/chapa}
+      CHAPA_RETURN_URL: ${CHAPA_RETURN_URL:-http://localhost:3000/payment/success}
+      JWT_SECRET: ${JWT_SECRET}
       HASURA_ADMIN_SECRET: ${HASURA_ADMIN_SECRET:-myadminsecretkey}
       HASURA_ENDPOINT: http://hasura:8080/v1/graphql
       PORT: 3001
     depends_on:
-      - postgres
-      - hasura
+      postgres:
+        condition: service_healthy
+      hasura:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build: ./frontend
@@ -55,10 +71,13 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Nuxt auto-maps NUXT_PUBLIC_* to runtimeConfig.public.*
       NUXT_PUBLIC_BACKEND_URL: http://localhost:3001
       NUXT_PUBLIC_HASURA_URL: http://localhost:8080/v1/graphql
+      NUXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:8080/v1/graphql
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -1,25 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="container mx-auto px-4 py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink to="/" class="text-2xl font-bold text-primary">
-            EventHub Ethiopia - Admin
-          </NuxtLink>
-          <div class="flex items-center gap-4">
-            <NuxtLink to="/dashboard" class="text-gray-600 hover:text-primary">
-              Dashboard
-            </NuxtLink>
-            <button @click="logout" class="text-gray-600 hover:text-primary">
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8">
+  <div>
+    <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Category Management</h1>
         <button
@@ -83,7 +64,7 @@
           </tbody>
         </table>
       </div>
-    </main>
+    </div>
 
     <!-- Create/Edit Modal -->
     <div
@@ -189,10 +170,12 @@ import { useMutation, useQuery } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'admin']
 })
 
-const { logout } = useAuth()
+useHead({ title: 'Category Management' })
+
+const { error: showError, success: showSuccess } = useToast()
 
 const GET_CATEGORIES = gql`
   query GetAllCategories {
@@ -308,7 +291,7 @@ const handleDelete = async () => {
     categoryToDelete.value = null
     refetch()
   } catch (err) {
-    console.error('Failed to delete category:', err)
+    showError('Failed to delete category. Please try again.')
   } finally {
     deleting.value = false
   }

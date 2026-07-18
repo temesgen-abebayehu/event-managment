@@ -9,10 +9,6 @@
     --color-primary-light: #818cf8;
   }
 
-  * {
-    @apply border-border;
-  }
-
   body {
     @apply bg-gray-50 text-gray-900;
     @apply antialiased;

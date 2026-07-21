@@ -1,82 +1,115 @@
 <template>
-  <div class="group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-       @click="navigateTo(`/events/${event.id}`)">
-    <!-- Image -->
-    <div class="relative h-48 overflow-hidden">
+  <article 
+    class="group bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden border border-gray-100"
+    @click="navigateTo(`/events/${event.id}`)"
+  >
+    <!-- Image Container with Overlay -->
+    <div class="relative h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
       <LazyImage
         v-if="featuredImage"
         :src="featuredImage"
         :alt="event.title"
-        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         :showPlaceholder="true"
       />
-      <div v-else class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      <div v-else class="w-full h-full bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
+        <svg class="w-20 h-20 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
       
-      <!-- Price badge with animation -->
-      <div class="absolute bottom-2 left-2 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg animate-fade-in">
-        {{ event.price === 0 ? 'FREE' : `${formatPrice(event.price)} ETB` }}
+      <!-- Gradient Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <!-- Price Badge - Modern floating design -->
+      <div class="absolute top-4 right-4 z-10">
+        <div class="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+          <span class="font-bold text-purple-600">
+            {{ event.price === 0 ? 'FREE' : `${formatPrice(event.price)} ETB` }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Date Badge -->
+      <div class="absolute top-4 left-4 z-10">
+        <div class="bg-white rounded-xl p-2 shadow-lg text-center min-w-[60px]">
+          <div class="text-xs font-semibold text-gray-500 uppercase">{{ formatMonth(event.event_date) }}</div>
+          <div class="text-2xl font-bold text-gray-900">{{ formatDay(event.event_date) }}</div>
+        </div>
       </div>
     </div>
 
     <!-- Content -->
-    <div class="p-4">
-      <!-- Category & Date -->
-      <div class="flex items-center gap-2 mb-2 flex-wrap">
-        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-medium">
-          {{ event.category.name }}
-        </span>
-        <span class="text-gray-500 text-xs flex items-center gap-1">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    <div class="p-5">
+      <!-- Category Badge -->
+      <div class="mb-3">
+        <span class="inline-flex items-center gap-1 bg-purple-50 text-purple-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
           </svg>
-          {{ formatDate(event.event_date) }}
+          {{ event.category.name }}
         </span>
       </div>
 
-      <!-- Title -->
-      <h3 class="text-lg font-semibold mb-2 line-clamp-2 hover:text-primary transition-colors">
+      <!-- Title with better typography -->
+      <h3 class="text-xl font-bold mb-2 line-clamp-2 text-gray-900 group-hover:text-purple-600 transition-colors leading-tight">
         {{ event.title }}
       </h3>
 
       <!-- Description -->
-      <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+      <p class="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
         {{ event.description }}
       </p>
 
-      <!-- Tags -->
-      <div v-if="event.event_tags && event.event_tags.length > 0" class="flex flex-wrap gap-1 mb-3">
+      <!-- Tags - Modern chip design -->
+      <div v-if="event.event_tags && event.event_tags.length > 0" class="flex flex-wrap gap-1.5 mb-4">
         <span
           v-for="eventTag in event.event_tags.slice(0, 3)"
           :key="eventTag.tag.id"
-          class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+          class="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-medium hover:bg-purple-100 hover:text-purple-700 transition-colors"
         >
-          #{{ eventTag.tag.name }}
+          {{ eventTag.tag.name }}
         </span>
-        <span v-if="event.event_tags.length > 3" class="text-xs text-gray-500">
-          +{{ event.event_tags.length - 3 }} more
+        <span v-if="event.event_tags.length > 3" class="text-xs text-purple-600 font-medium px-2 py-1">
+          +{{ event.event_tags.length - 3 }}
         </span>
       </div>
 
-      <!-- Location & Stats -->
-      <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-        <div class="flex items-center gap-1 text-gray-500 text-sm">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Footer Info -->
+      <div class="pt-4 border-t border-gray-100 space-y-2">
+        <!-- Location -->
+        <div class="flex items-start gap-2 text-gray-600 text-sm">
+          <svg class="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span class="truncate">{{ event.venue }}</span>
+          <span class="line-clamp-1 font-medium">{{ event.venue }}</span>
+        </div>
+
+        <!-- Time -->
+        <div class="flex items-center gap-2 text-gray-600 text-sm">
+          <svg class="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-medium">{{ formatTime(event.event_date) }}</span>
+        </div>
+      </div>
+
+      <!-- CTA Button appears on hover -->
+      <div class="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div class="flex items-center justify-between text-purple-600 font-semibold">
+          <span>View Details</span>
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
         </div>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
@@ -92,28 +125,23 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-ET').format(price)
 }
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('en-ET', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+const formatMonth = (date: string) => {
+  return new Date(date).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+}
+
+const formatDay = (date: string) => {
+  return new Date(date).getDate()
+}
+
+const formatTime = (date: string) => {
+  return new Date(date).toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
   })
 }
 </script>
 
 <style scoped>
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
+/* Remove old styles as we're using Tailwind utilities */
 </style>

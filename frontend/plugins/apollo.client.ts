@@ -10,10 +10,30 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   const authLink = new ApolloLink((operation, forward) => {
     const token = useCookie('auth_token').value
-    if (token) {
+    
+    // Check if operation explicitly requests anonymous role
+    const context = operation.getContext()
+    const forceAnonymous = context.forceAnonymous === true
+    
+    if (forceAnonymous) {
+      // Explicitly use anonymous role (for public browsing)
+      operation.setContext({
+        headers: {
+          'x-hasura-role': 'anonymous',
+        },
+      })
+    } else if (token) {
+      // Use JWT authentication for user-specific queries
       operation.setContext({
         headers: {
           authorization: `Bearer ${token}`,
+        },
+      })
+    } else {
+      // Default to anonymous when not logged in
+      operation.setContext({
+        headers: {
+          'x-hasura-role': 'anonymous',
         },
       })
     }

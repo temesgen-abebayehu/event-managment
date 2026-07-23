@@ -4,13 +4,13 @@
     @click="navigateTo(`/events/${event.id}`)"
   >
     <!-- Image Container with Overlay -->
-    <div class="relative h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-      <LazyImage
+    <div class="relative h-56 overflow-hidden bg-gray-100">
+      <img
         v-if="featuredImage"
         :src="featuredImage"
         :alt="event.title"
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        :showPlaceholder="true"
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        loading="lazy"
       />
       <div v-else class="w-full h-full bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
         <svg class="w-20 h-20 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -11,6 +11,18 @@
 
       <!-- Signup Form -->
       <div class="bg-white rounded-lg shadow-lg p-8">
+        <!-- Back Button -->
+        <button
+          type="button"
+          @click="$router.push('/')"
+          class="flex items-center gap-2 text-gray-600 hover:text-purple-600 mb-6 transition-colors group"
+        >
+          <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span class="font-medium">Back to Home</span>
+        </button>
+
         <form @submit="onSubmit">
           <!-- Full Name -->
           <div class="mb-4">

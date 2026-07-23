@@ -12,7 +12,7 @@
     </div>
 
     <!-- Filters Row -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <!-- Category Filter -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
@@ -50,6 +50,18 @@
       </div>
 
       <!-- Price Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Min Price (ETB)</label>
+        <input
+          v-model.number="filters.min_price"
+          type="number"
+          min="0"
+          placeholder="0"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+          @input="onFilterChange"
+        />
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Max Price (ETB)</label>
         <input
@@ -107,8 +119,8 @@ const filters = ref({
   category_id: '',
   date_from: '',
   date_to: '',
-  max_price: null,
-  min_price: 0,
+  max_price: null as number | null,
+  min_price: null as number | null,
 })
 
 let searchTimeout: any = null
@@ -122,7 +134,20 @@ const onSearchChange = () => {
 
 const onFilterChange = () => {
   quickFilter.value = ''
-  emit('update:filters', { ...filters.value })
+  // Create a clean filter object without null/empty values
+  const cleanFilters: any = {}
+  
+  if (filters.value.category_id) cleanFilters.category_id = filters.value.category_id
+  if (filters.value.date_from) cleanFilters.date_from = filters.value.date_from
+  if (filters.value.date_to) cleanFilters.date_to = filters.value.date_to
+  if (filters.value.max_price !== null && filters.value.max_price !== undefined && filters.value.max_price !== '') {
+    cleanFilters.max_price = Number(filters.value.max_price)
+  }
+  if (filters.value.min_price !== null && filters.value.min_price !== undefined && filters.value.min_price !== '') {
+    cleanFilters.min_price = Number(filters.value.min_price)
+  }
+  
+  emit('update:filters', cleanFilters)
 }
 
 const setQuickFilter = (type: string) => {
@@ -154,7 +179,7 @@ const clearFilters = () => {
     date_from: '',
     date_to: '',
     max_price: null,
-    min_price: 0,
+    min_price: null,
   }
   emit('search', '')
   emit('update:filters', {})

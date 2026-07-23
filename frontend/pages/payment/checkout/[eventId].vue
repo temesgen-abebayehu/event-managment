@@ -6,6 +6,17 @@
       </div>
 
       <div v-else-if="event" class="bg-white rounded-lg shadow-lg p-8">
+        <!-- Back Button -->
+        <button
+          @click="$router.back()"
+          class="flex items-center gap-2 text-gray-600 hover:text-purple-600 mb-6 transition-colors group"
+        >
+          <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span class="font-medium">Back</span>
+        </button>
+
         <h1 class="text-3xl font-bold mb-6">Checkout</h1>
 
         <!-- Event Summary -->
@@ -24,9 +35,12 @@
             v-model.number="quantity"
             type="number"
             min="1"
-            max="10"
+            :max="ticketsRemaining"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
           />
+          <p class="mt-1 text-sm text-gray-600">
+            {{ ticketsRemaining }} tickets available
+          </p>
         </div>
 
         <!-- Price Summary -->
@@ -95,6 +109,11 @@ const GET_EVENT = gql`
       venue
       event_date
       price
+      tickets {
+        id
+        quantity_total
+        quantity_sold
+      }
     }
   }
 `
@@ -102,9 +121,25 @@ const GET_EVENT = gql`
 const { result, loading: loadingEvent } = useQuery(GET_EVENT, { id: eventId })
 const event = computed(() => result.value?.events_by_pk)
 
+const ticket = computed(() => event.value?.tickets?.[0])
+const ticketsRemaining = computed(() => {
+  if (!ticket.value) return 0
+  return ticket.value.quantity_total - ticket.value.quantity_sold
+})
+
 const quantity = ref(1)
 const loading = ref(false)
 const error = ref('')
+
+// Validate quantity doesn't exceed available tickets
+watch([quantity, ticketsRemaining], () => {
+  if (quantity.value > ticketsRemaining.value) {
+    quantity.value = ticketsRemaining.value
+  }
+  if (quantity.value < 1) {
+    quantity.value = 1
+  }
+})
 
 const totalPrice = computed(() => {
   return (event.value?.price || 0) * quantity.value
@@ -124,6 +159,17 @@ const formatDate = (date: string) => {
 }
 
 const handlePayment = async () => {
+  // Validate tickets available
+  if (ticketsRemaining.value === 0) {
+    error.value = 'Sorry, this event is sold out'
+    return
+  }
+
+  if (quantity.value > ticketsRemaining.value) {
+    error.value = `Only ${ticketsRemaining.value} tickets available`
+    return
+  }
+
   loading.value = true
   error.value = ''
 

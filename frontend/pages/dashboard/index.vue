@@ -152,7 +152,11 @@ const DELETE_EVENT = gql`
   }
 `
 
-const { result, loading, refetch } = useQuery(MY_EVENTS, { user_id: user.value?.id })
+const { result, loading, refetch } = useQuery(
+  MY_EVENTS, 
+  () => ({ user_id: user.value?.id }),
+  () => ({ enabled: !!user.value?.id })  // Only run query when user.id exists
+)
 const myEvents = computed(() => result.value?.events || [])
 
 const { mutate: deleteEventMutation } = useMutation(DELETE_EVENT)

@@ -49,33 +49,6 @@ export const GET_EVENTS = gql`
   }
 `
 
-export const SEARCH_EVENTS = gql`
-  query SearchEvents($search_term: String!) {
-    search_events(args: { search_term: $search_term }) {
-      id
-      title
-      description
-      venue
-      address
-      price
-      event_date
-      category {
-        name
-        slug
-      }
-      event_images(where: { is_featured: { _eq: true } }, limit: 1) {
-        url
-      }
-      event_tags {
-        tag {
-          id
-          name
-        }
-      }
-    }
-  }
-`
-
 export const GET_NEARBY_EVENTS = gql`
   query GetNearbyEvents($lat: numeric!, $lng: numeric!, $radius_km: numeric!) {
     get_nearby_events(args: { lat: $lat, lng: $lng, radius_km: $radius_km }) {

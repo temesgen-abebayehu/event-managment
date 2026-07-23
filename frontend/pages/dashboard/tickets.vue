@@ -119,7 +119,11 @@ const MY_ORDERS = gql`
   }
 `
 
-const { result, loading } = useQuery(MY_ORDERS, { user_id: user.value?.id })
+const { result, loading } = useQuery(
+  MY_ORDERS, 
+  () => ({ user_id: user.value?.id }),
+  () => ({ enabled: !!user.value?.id })
+)
 const myOrders = computed(() => result.value?.orders || [])
 
 const formatPrice = (price: number) => {

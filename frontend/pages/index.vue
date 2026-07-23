@@ -1,11 +1,11 @@
 <template>
   <div class="min-h-screen bg-white">
-    <!-- Modern Hero Section with gradient and search -->
-    <section class="relative bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 overflow-hidden">
+    <!-- Modern Hero Section with background image -->
+    <section class="relative overflow-hidden">
       <!-- Background Image -->
       <div class="absolute inset-0">
+        <img src="/consert2.jpg" alt="Concert background" class="w-full h-full object-cover" />
         <div class="absolute inset-0 bg-gradient-to-r from-purple-900/70 to-pink-900/70"></div>
-        <img src="public/consert2.jpg" alt="Concert background" class="w-full h-full object-cover z-10" />
       </div>
       
       <div class="relative container mx-auto px-4 py-20 md:py-28">
@@ -60,11 +60,16 @@
       <div class="mb-8 flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
         <button
           v-for="cat in quickCategories"
-          :key="cat"
+          :key="cat.id || 'all'"
           @click="handleQuickFilter(cat)"
-          class="flex-shrink-0 px-6 py-3 rounded-full border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-all duration-200 font-medium text-gray-700 hover:text-purple-700"
+          :class="[
+            'flex-shrink-0 px-6 py-3 rounded-full border-2 transition-all duration-200 font-medium',
+            activeCategoryId === cat.id 
+              ? 'bg-purple-600 border-purple-600 text-white shadow-lg' 
+              : 'border-gray-200 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-700'
+          ]"
         >
-          {{ cat }}
+          {{ cat.name }}
         </button>
       </div>
 
@@ -217,15 +222,55 @@
 <script setup lang="ts">
 useHead({ title: 'Discover Events' })
 
+const route = useRoute()
+const router = useRouter()
+
 const viewMode = ref<'grid' | 'map'>('grid')
-const currentPage = ref(1)
 const pageSize = 12
-const searchQuery = ref('')
-const searchInput = ref('')
-const activeFilters = ref({})
 const showFilters = ref(false)
 
-const quickCategories = ['All Events', 'Music', 'Arts', 'Sports', 'Food & Drink', 'Business']
+// Load actual categories from database
+const { categories } = useCategories()
+const quickCategories = computed(() => {
+  const cats = categories.value.map((c: any) => ({ id: c.id, name: c.name }))
+  return [{ id: null, name: 'All Events' }, ...cats]
+})
+
+// Initialize from URL query params
+const currentPage = ref(parseInt(route.query.page as string) || 1)
+const searchQuery = ref((route.query.q as string) || '')
+const searchInput = ref(searchQuery.value)
+const activeFilters = ref<any>({})
+
+// Sync filters from URL on mount
+onMounted(() => {
+  const urlFilters: any = {}
+  
+  if (route.query.category) urlFilters.category_id = route.query.category
+  if (route.query.date_from) urlFilters.date_from = route.query.date_from
+  if (route.query.date_to) urlFilters.date_to = route.query.date_to
+  if (route.query.max_price) urlFilters.max_price = parseFloat(route.query.max_price as string)
+  if (route.query.min_price) urlFilters.min_price = parseFloat(route.query.min_price as string)
+  
+  activeFilters.value = urlFilters
+})
+
+// Update URL when filters change
+const updateURL = () => {
+  const query: any = {}
+  
+  if (searchQuery.value) query.q = searchQuery.value
+  if (activeFilters.value.category_id) query.category = activeFilters.value.category_id
+  if (activeFilters.value.date_from) query.date_from = activeFilters.value.date_from
+  if (activeFilters.value.date_to) query.date_to = activeFilters.value.date_to
+  if (activeFilters.value.max_price !== null && activeFilters.value.max_price !== undefined) {
+    query.max_price = activeFilters.value.max_price
+  }
+  if (activeFilters.value.min_price) query.min_price = activeFilters.value.min_price
+  if (currentPage.value > 1) query.page = currentPage.value
+  
+  router.push({ query })
+}
 
 const filters = computed(() => ({
   ...activeFilters.value,
@@ -233,20 +278,7 @@ const filters = computed(() => ({
   offset: (currentPage.value - 1) * pageSize,
 }))
 
-const { events: filteredEvents, totalCount, loading: eventsLoading } = useEvents(filters)
-const { events: searchResults, loading: searchLoading } = useSearchEvents(searchQuery)
-
-const displayEvents = computed(() => {
-  if (searchQuery.value.length > 0) {
-    return searchResults.value || []
-  }
-  return filteredEvents.value || []
-})
-
-const isLoading = computed(() => {
-  if (searchQuery.value.length > 0) return searchLoading.value
-  return eventsLoading.value
-})
+const { events: displayEvents, totalCount, loading: isLoading } = useEvents(filters, searchQuery)
 
 const totalPages = computed(() => Math.ceil(totalCount.value / pageSize))
 
@@ -281,20 +313,29 @@ const paginationPages = computed(() => {
 const handleFiltersUpdate = (newFilters: any) => {
   activeFilters.value = newFilters
   currentPage.value = 1
+  updateURL()
 }
 
 const handleSearch = (query: string) => {
   searchQuery.value = query
+  searchInput.value = query
   currentPage.value = 1
+  updateURL()
 }
 
-const handleQuickFilter = (category: string) => {
-  if (category === 'All Events') {
-    activeFilters.value = {}
+const handleQuickFilter = (categoryObj: any) => {
+  if (categoryObj.id === null) {
+    // All Events - clear category filter only
+    const { category_id, ...rest } = activeFilters.value
+    activeFilters.value = rest
   } else {
-    activeFilters.value = { category }
+    // Filter by category ID
+    activeFilters.value = { ...activeFilters.value, category_id: categoryObj.id }
   }
+  searchQuery.value = '' // Clear search when using category filter
+  searchInput.value = ''
   currentPage.value = 1
+  updateURL()
 }
 
 const resetFilters = () => {
@@ -302,11 +343,21 @@ const resetFilters = () => {
   searchQuery.value = ''
   searchInput.value = ''
   currentPage.value = 1
+  updateURL()
 }
 
 const handleMarkerClick = (event: any) => {
   navigateTo(`/events/${event.id}`)
 }
+
+// Watch for page changes
+watch(currentPage, () => {
+  updateURL()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
+
+// Watch for active category to highlight button
+const activeCategoryId = computed(() => activeFilters.value.category_id || null)
 </script>
 
 <style scoped>

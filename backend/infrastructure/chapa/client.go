@@ -25,9 +25,16 @@ type InitializePaymentRequest struct {
 	Email       string `json:"email"`
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number,omitempty"`
 	TxRef       string `json:"tx_ref"`
 	CallbackURL string `json:"callback_url"`
 	ReturnURL   string `json:"return_url"`
+	Customization *Customization `json:"customization,omitempty"`
+}
+
+type Customization struct {
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type InitializePaymentResponse struct {

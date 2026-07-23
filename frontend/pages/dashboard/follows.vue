@@ -41,6 +41,10 @@ useHead({ title: 'Following' })
 
 const { user } = useAuth()
 
-const { result, loading } = useQuery(GET_USER_FOLLOWS, { user_id: user.value?.id })
+const { result, loading } = useQuery(
+  GET_USER_FOLLOWS, 
+  () => ({ user_id: user.value?.id }),
+  () => ({ enabled: !!user.value?.id })
+)
 const followedEvents = computed(() => result.value?.follows || [])
 </script>

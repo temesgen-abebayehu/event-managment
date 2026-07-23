@@ -41,6 +41,10 @@ useHead({ title: 'Bookmarks' })
 
 const { user } = useAuth()
 
-const { result, loading } = useQuery(GET_USER_BOOKMARKS, { user_id: user.value?.id })
+const { result, loading } = useQuery(
+  GET_USER_BOOKMARKS, 
+  () => ({ user_id: user.value?.id }),
+  () => ({ enabled: !!user.value?.id })
+)
 const bookmarkedEvents = computed(() => result.value?.bookmarks || [])
 </script>

@@ -84,6 +84,7 @@ func (u *PaymentUsecase) InitiatePayment(userID string, req domain.InitiatePayme
 		Email:       user.Email,
 		FirstName:   firstName,
 		LastName:    lastName,
+		PhoneNumber: getPhoneOrDefault(user.Phone),
 		TxRef:       txRef,
 		CallbackURL: u.callbackURL,
 		ReturnURL:   u.returnURL,
@@ -156,4 +157,12 @@ func splitName(fullName string) (string, string) {
 		return parts[0], "."
 	}
 	return parts[0], strings.Join(parts[1:], " ")
+}
+
+// getPhoneOrDefault returns user's phone or default Ethiopian number format
+func getPhoneOrDefault(phone *string) string {
+	if phone != nil && *phone != "" {
+		return *phone
+	}
+	return "0900000000" // Default placeholder for testing
 }

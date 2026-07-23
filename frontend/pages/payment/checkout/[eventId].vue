@@ -191,6 +191,10 @@ const handlePayment = async () => {
     })
 
     if (response.checkout_url) {
+      // Store tx_ref in localStorage before redirecting to Chapa
+      localStorage.setItem('pending_tx_ref', response.tx_ref)
+      localStorage.setItem('pending_order_id', response.order_id)
+      
       // Redirect to Chapa payment page
       window.location.href = response.checkout_url
     }

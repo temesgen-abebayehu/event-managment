@@ -293,14 +293,15 @@ useHead({ title: 'Edit Event' })
 
 const route = useRoute()
 const router = useRouter()
-const eventId = route.params.id
+const eventSlug = route.params.id
 const { categories } = useCategories()
 const config = useRuntimeConfig()
 
 const GET_EVENT = gql`
-  query GetEvent($id: uuid!) {
-    events_by_pk(id: $id) {
+  query GetEvent($slug: String!) {
+    events(where: { slug: { _eq: $slug } }, limit: 1) {
       id
+      slug
       title
       category_id
       description
@@ -361,8 +362,9 @@ const SET_FEATURED_IMAGE = gql`
   }
 `
 
-const { result: eventResult, loading: loadingEvent, refetch } = useQuery(GET_EVENT, { id: eventId })
-const event = computed(() => eventResult.value?.events_by_pk)
+const { result: eventResult, loading: loadingEvent, refetch } = useQuery(GET_EVENT, { slug: eventSlug })
+const event = computed(() => eventResult.value?.events?.[0])
+const eventId = computed(() => event.value?.id) // Keep ID for mutations
 const existingImages = computed(() => event.value?.event_images || [])
 
 const { mutate: updateEventMutation } = useMutation(UPDATE_EVENT)
@@ -477,7 +479,7 @@ const handleDeleteImage = async () => {
 const setFeaturedImage = async (imageId: string) => {
   try {
     await setFeaturedMutation({
-      event_id: eventId,
+      event_id: eventId.value,
       image_id: imageId
     })
     await refetch()
@@ -493,13 +495,14 @@ const handleSubmit = async () => {
   try {
     // Update event details
     await updateEventMutation({
-      id: eventId,
+      id: eventId.value,
       set: form.value,
     })
 
     // Upload new images if any
     if (newImagePreviews.value.length > 0) {
       const formData = new FormData()
+      formData.append('event_id', eventId.value) // Add event_id
       newImagePreviews.value.forEach(preview => {
         formData.append('files', preview.file)
       })
@@ -512,9 +515,9 @@ const handleSubmit = async () => {
         body: formData,
       })
 
-      // Insert image records
-      const imageObjects = uploadResponse.map((img: any, index: number) => ({
-        event_id: eventId,
+      // Insert image records - uploadResponse.files is the array
+      const imageObjects = uploadResponse.files.map((img: any, index: number) => ({
+        event_id: eventId.value,
         url: img.url,
         public_id: img.public_id,
         is_featured: existingImages.value.length === 0 && index === 0, // First image is featured if no existing images

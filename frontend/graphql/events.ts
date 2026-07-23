@@ -14,6 +14,7 @@ export const GET_EVENTS = gql`
       offset: $offset
     ) {
       id
+      slug
       title
       description
       venue

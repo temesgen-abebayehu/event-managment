@@ -7,7 +7,7 @@ import {
   CHECK_USER_INTERACTIONS,
 } from '~/graphql/interactions'
 
-export const useEventInteractions = (eventId: string) => {
+export const useEventInteractions = (eventId: Ref<string | undefined>) => {
   const { user, isAuthenticated } = useAuth()
   const { error: showError } = useToast()
 
@@ -15,10 +15,10 @@ export const useEventInteractions = (eventId: string) => {
   const { result, refetch } = useQuery(
     CHECK_USER_INTERACTIONS,
     () => ({
-      event_id: eventId,
+      event_id: eventId.value,
       user_id: user.value?.id,
     }),
-    () => ({ enabled: isAuthenticated.value })
+    () => ({ enabled: isAuthenticated.value && !!eventId.value })
   )
 
   const isBookmarked = computed(() => {
@@ -41,11 +41,13 @@ export const useEventInteractions = (eventId: string) => {
       return
     }
 
+    if (!eventId.value) return
+
     try {
       if (isBookmarked.value) {
-        await deleteBookmark({ event_id: eventId })
+        await deleteBookmark({ event_id: eventId.value })
       } else {
-        await addBookmark({ event_id: eventId })
+        await addBookmark({ event_id: eventId.value })
       }
       refetch()
     } catch (error) {
@@ -59,11 +61,13 @@ export const useEventInteractions = (eventId: string) => {
       return
     }
 
+    if (!eventId.value) return
+
     try {
       if (isFollowing.value) {
-        await deleteFollow({ event_id: eventId })
+        await deleteFollow({ event_id: eventId.value })
       } else {
-        await addFollow({ event_id: eventId })
+        await addFollow({ event_id: eventId.value })
       }
       refetch()
     } catch (error) {

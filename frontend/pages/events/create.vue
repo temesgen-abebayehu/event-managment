@@ -371,6 +371,8 @@ const onSubmit = handleSubmit(async (values) => {
   loading.value = true
   serverError.value = ''
 
+  let eventData: any = {}
+
   try {
     let uploadedFiles = []
 
@@ -393,19 +395,8 @@ const onSubmit = handleSubmit(async (values) => {
       uploadedFiles = uploadResponse.files
     }
 
-    // 2. Prepare tags data
-    const tagsData = tags.value.map(tagName => ({
-      tag: {
-        data: { name: tagName },
-        on_conflict: {
-          constraint: 'tags_name_key',
-          update_columns: []  // Don't update - just skip if exists
-        }
-      }
-    }))
-
-    // 3. Create event
-    const eventData: any = {
+    // 2. Create event
+    eventData = {
       title: values.title,
       description: values.description || '',
       venue: values.venue,
@@ -431,19 +422,28 @@ const onSubmit = handleSubmit(async (values) => {
       }
     }
 
-    // Add tags only if provided
     if (tags.value.length > 0) {
       eventData.event_tags = {
-        data: tagsData,
+        data: tags.value.map(tagName => ({
+          tag: {
+            data: { name: tagName },
+            on_conflict: {
+              constraint: 'tags_name_key',
+              update_columns: ['name'],
+            },
+          },
+        })),
       }
     }
 
+    console.log('Event data being sent:', JSON.stringify(eventData, null, 2))
+    
     const result = await createEventMutation({ object: eventData })
 
     if (result?.data?.insert_events_one) {
       const eventId = result.data.insert_events_one.id
       
-      // 4. Create ticket for the event
+      // 3. Create ticket for the event
       await createTicketMutation({
         event_id: eventId,
         price: values.price,
@@ -453,7 +453,9 @@ const onSubmit = handleSubmit(async (values) => {
       navigateTo('/dashboard')
     }
   } catch (err: any) {
-    serverError.value = err.data?.error || 'Failed to create event'
+    console.error('Create event error:', err)
+    console.error('Event data:', eventData)
+    serverError.value = err.message || err.data?.error || 'Failed to create event'
   } finally {
     loading.value = false
   }

@@ -5,7 +5,7 @@ export const useEvents = (filters: any = {}, searchTerm: Ref<string> = ref('')) 
   const buildWhere = () => {
     const where: any = {}
 
-    // Search functionality - multi-word search
+    // Search functionality - multi-word search across title, description, venue, address, and tags
     if (searchTerm.value && searchTerm.value.trim().length > 0) {
       const terms = searchTerm.value.trim().split(/\s+/)
       const conditions = terms.map(term => ({
@@ -14,6 +14,7 @@ export const useEvents = (filters: any = {}, searchTerm: Ref<string> = ref('')) 
           { description: { _ilike: `%${term}%` } },
           { venue: { _ilike: `%${term}%` } },
           { address: { _ilike: `%${term}%` } },
+          { event_tags: { tag: { name: { _ilike: `%${term}%` } } } }
         ]
       }))
       where._and = conditions

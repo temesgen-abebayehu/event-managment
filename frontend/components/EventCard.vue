@@ -1,7 +1,7 @@
 <template>
   <article 
     class="group bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden border border-gray-100"
-    @click="navigateTo(`/events/${event.id}`)"
+    @click="navigateTo(`/events/${event.slug}`)"
   >
     <!-- Image Container with Overlay -->
     <div class="relative h-56 overflow-hidden bg-gray-100">

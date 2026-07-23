@@ -110,6 +110,8 @@ const MY_ORDERS = gql`
       ticket {
         price
         event {
+          id
+          slug
           title
           venue
           event_date

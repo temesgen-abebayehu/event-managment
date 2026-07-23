@@ -49,6 +49,7 @@ export const GET_USER_BOOKMARKS = gql`
     bookmarks(where: { user_id: { _eq: $user_id } }) {
       event {
         id
+        slug
         title
         description
         venue
@@ -56,9 +57,16 @@ export const GET_USER_BOOKMARKS = gql`
         price
         category {
           name
+          slug
         }
         event_images(where: { is_featured: { _eq: true } }, limit: 1) {
           url
+        }
+        event_tags {
+          tag {
+            id
+            name
+          }
         }
       }
     }
@@ -70,6 +78,7 @@ export const GET_USER_FOLLOWS = gql`
     follows(where: { user_id: { _eq: $user_id } }) {
       event {
         id
+        slug
         title
         description
         venue
@@ -77,9 +86,16 @@ export const GET_USER_FOLLOWS = gql`
         price
         category {
           name
+          slug
         }
         event_images(where: { is_featured: { _eq: true } }, limit: 1) {
           url
+        }
+        event_tags {
+          tag {
+            id
+            name
+          }
         }
       }
     }

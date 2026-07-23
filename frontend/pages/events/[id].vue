@@ -245,15 +245,15 @@ import { useQuery } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
 
 const route = useRoute()
-const eventId = route.params.id
+const eventSlug = route.params.id // Param name stays 'id' but contains slug
 
 const { isAuthenticated } = useAuth()
-const { isBookmarked, isFollowing, toggleBookmark, toggleFollow } = useEventInteractions(eventId as string)
 
 const GET_EVENT = gql`
-  query GetEvent($id: uuid!) {
-    events_by_pk(id: $id) {
+  query GetEvent($slug: String!) {
+    events(where: { slug: { _eq: $slug } }, limit: 1) {
       id
+      slug
       title
       description
       venue
@@ -292,7 +292,7 @@ const GET_EVENT = gql`
 
 const { result, loading } = useQuery(
   GET_EVENT, 
-  { id: eventId },
+  { slug: eventSlug },
   {
     context: {
       forceAnonymous: true // Use anonymous role for public event viewing
@@ -300,7 +300,18 @@ const { result, loading } = useQuery(
   }
 )
 
-const event = computed(() => result.value?.events_by_pk)
+const event = computed(() => result.value?.events?.[0])
+const eventId = computed(() => event.value?.id) // Extract ID for interactions
+const { isBookmarked, isFollowing, toggleBookmark, toggleFollow } = useEventInteractions(eventId)
+
+// Ticket availability computed properties
+const ticket = computed(() => event.value?.tickets?.[0])
+const ticketsRemaining = computed(() => {
+  if (!ticket.value) return 0
+  return ticket.value.quantity_total - ticket.value.quantity_sold
+})
+const ticketsAvailable = computed(() => ticketsRemaining.value > 0)
+const soldOut = computed(() => ticketsRemaining.value === 0)
 
 // All images for carousel
 const allImages = computed(() => event.value?.event_images || [])
@@ -350,15 +361,6 @@ onMounted(() => {
   })
 })
 
-// Ticket availability computed properties
-const ticket = computed(() => event.value?.tickets?.[0])
-const ticketsRemaining = computed(() => {
-  if (!ticket.value) return 0
-  return ticket.value.quantity_total - ticket.value.quantity_sold
-})
-const ticketsAvailable = computed(() => ticketsRemaining.value > 0)
-const soldOut = computed(() => ticketsRemaining.value === 0)
-
 // Dynamic page title based on event name
 useHead({
   title: computed(() => event.value?.title || 'Event Details'),
@@ -380,6 +382,6 @@ const formatDate = (date: string) => {
 }
 
 const handleBuyTicket = () => {
-  navigateTo(`/payment/checkout/${eventId}`)
+  navigateTo(`/payment/checkout/${event.value.slug}`)
 }
 </script>

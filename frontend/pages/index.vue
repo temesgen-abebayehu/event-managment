@@ -347,7 +347,7 @@ const resetFilters = () => {
 }
 
 const handleMarkerClick = (event: any) => {
-  navigateTo(`/events/${event.id}`)
+  navigateTo(`/events/${event.slug}`)
 }
 
 // Watch for page changes

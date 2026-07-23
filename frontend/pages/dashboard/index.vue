@@ -66,7 +66,7 @@
             <!-- Actions -->
             <div class="flex gap-2">
               <NuxtLink
-                :to="`/events/edit/${event.id}`"
+                :to="`/events/edit/${event.slug}`"
                 class="flex-1 bg-blue-500 text-white text-center py-2 rounded-lg hover:bg-blue-600 transition"
               >
                 Edit
@@ -132,6 +132,7 @@ const MY_EVENTS = gql`
   query MyEvents($user_id: uuid!) {
     events(where: { user_id: { _eq: $user_id } }, order_by: { created_at: desc }) {
       id
+      slug
       title
       description
       venue

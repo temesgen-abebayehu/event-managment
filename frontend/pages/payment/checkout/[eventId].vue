@@ -99,12 +99,13 @@ useHead({ title: 'Checkout' })
 
 const route = useRoute()
 const config = useRuntimeConfig()
-const eventId = route.params.eventId
+const eventSlug = route.params.eventId
 
 const GET_EVENT = gql`
-  query GetEvent($id: uuid!) {
-    events_by_pk(id: $id) {
+  query GetEvent($slug: String!) {
+    events(where: { slug: { _eq: $slug } }, limit: 1) {
       id
+      slug
       title
       venue
       event_date
@@ -118,8 +119,8 @@ const GET_EVENT = gql`
   }
 `
 
-const { result, loading: loadingEvent } = useQuery(GET_EVENT, { id: eventId })
-const event = computed(() => result.value?.events_by_pk)
+const { result, loading: loadingEvent } = useQuery(GET_EVENT, { slug: eventSlug })
+const event = computed(() => result.value?.events?.[0])
 
 const ticket = computed(() => event.value?.tickets?.[0])
 const ticketsRemaining = computed(() => {
@@ -181,7 +182,7 @@ const handlePayment = async () => {
       },
       body: {
         input: {
-          event_id: eventId,
+          event_id: event.value.id, // Use UUID for backend
           quantity: quantity.value,
         },
         session_variables: {

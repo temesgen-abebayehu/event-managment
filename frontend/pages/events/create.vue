@@ -457,26 +457,22 @@ const onSubmit = handleSubmit(async (values) => {
     if (result?.data?.insert_events_one) {
       const eventId = result.data.insert_events_one.id
       
-      // 3. Link tags to event (if any)
+      // 3. Link tags to event (if any) - Use backend to insert directly
       if (tags.value.length > 0) {
         try {
-          // First insert/get tags
-          const tagsData = tags.value.map(tagName => ({ name: tagName }))
-          const tagsResult = await insertTagsMutation({ tags: tagsData })
-          
-          if (tagsResult?.data?.insert_tags?.returning) {
-            const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
-            
-            // Then link them to event
-            if (tagIds.length > 0) {
-              await createEventTagsMutation({
-                objects: tagIds.map(tagId => ({
-                  event_id: eventId,
-                  tag_id: tagId
-                }))
-              })
+          // Backend will handle tag insertion and linking
+          await $fetch(`${config.public.backendUrl}/actions/link-tags`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${useCookie('auth_token').value}`,
+            },
+            body: {
+              input: {
+                event_id: eventId,
+                tag_names: tags.value
+              }
             }
-          }
+          })
         } catch (tagError) {
           console.error('Failed to link tags, but event created:', tagError)
           // Don't fail the whole operation, tags are optional

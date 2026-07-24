@@ -43,6 +43,7 @@ func main() {
 	authHandler := delivery.NewAuthHandler(authUsecase)
 	uploadHandler := delivery.NewUploadHandler(uploadUsecase, cfg.JWTSecret)
 	paymentHandler := delivery.NewPaymentHandler(paymentUsecase)
+	tagHandler := delivery.NewTagHandler(hasuraClient, cfg.JWTSecret)
 
 	// Setup routes
 	r := mux.NewRouter()
@@ -63,6 +64,9 @@ func main() {
 	// Upload actions
 	r.HandleFunc("/actions/upload", uploadHandler.UploadFiles).Methods("POST", "OPTIONS")
 	r.HandleFunc("/actions/delete-files", uploadHandler.DeleteFiles).Methods("POST", "OPTIONS")
+	
+	// Tag actions
+	r.HandleFunc("/actions/link-tags", tagHandler.LinkTags).Methods("POST", "OPTIONS")
 	
 	// Payment actions
 	r.HandleFunc("/actions/initiate-payment", paymentHandler.InitiatePayment).Methods("POST", "OPTIONS")

@@ -34,7 +34,8 @@ func (u *AuthUsecase) Signup(req domain.SignupRequest) (*domain.AuthResponse, er
 	// Create user
 	user, err := u.userRepo.Create(req.Email, passwordHash, req.FullName)
 	if err != nil {
-		return nil, errors.New("email already exists")
+		// Log the actual error for debugging
+		return nil, err
 	}
 
 	// Business logic: Generate JWT

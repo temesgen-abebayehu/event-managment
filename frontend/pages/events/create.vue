@@ -371,7 +371,13 @@ const INSERT_TAGS = gql`
 
 const CREATE_EVENT_TAGS = gql`
   mutation CreateEventTags($objects: [event_tags_insert_input!]!) {
-    insert_event_tags(objects: $objects) {
+    insert_event_tags(
+      objects: $objects
+      on_conflict: {
+        constraint: event_tags_pkey
+        update_columns: []
+      }
+    ) {
       affected_rows
     }
   }
@@ -457,22 +463,26 @@ const onSubmit = handleSubmit(async (values) => {
     if (result?.data?.insert_events_one) {
       const eventId = result.data.insert_events_one.id
       
-      // 3. Link tags to event (if any) - Use backend to insert directly
+      // 3. Link tags to event (if any)
       if (tags.value.length > 0) {
         try {
-          // Backend will handle tag insertion and linking
-          await $fetch(`${config.public.backendUrl}/actions/link-tags`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${useCookie('auth_token').value}`,
-            },
-            body: {
-              input: {
-                event_id: eventId,
-                tag_names: tags.value
-              }
+          // First insert/get tags
+          const tagsData = tags.value.map(tagName => ({ name: tagName }))
+          const tagsResult = await insertTagsMutation({ tags: tagsData })
+          
+          if (tagsResult?.data?.insert_tags?.returning) {
+            const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
+            
+            // Then link them to event
+            if (tagIds.length > 0) {
+              await createEventTagsMutation({
+                objects: tagIds.map(tagId => ({
+                  event_id: eventId,
+                  tag_id: tagId
+                }))
+              })
             }
-          })
+          }
         } catch (tagError) {
           console.error('Failed to link tags, but event created:', tagError)
           // Don't fail the whole operation, tags are optional

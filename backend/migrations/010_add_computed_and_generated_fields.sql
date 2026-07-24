@@ -145,9 +145,9 @@ EXECUTE FUNCTION update_event_search_vector();
 CREATE OR REPLACE FUNCTION update_event_search_on_tags()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Update the event's search vector
+    -- Just touch the updated_at to trigger the search_vector recalculation
     UPDATE events 
-    SET search_vector = search_vector -- Trigger will recalculate
+    SET updated_at = NOW()
     WHERE id = COALESCE(NEW.event_id, OLD.event_id);
     
     RETURN COALESCE(NEW, OLD);

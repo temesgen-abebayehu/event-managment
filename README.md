@@ -27,14 +27,14 @@
 
 ## 🎯 Overview
 
-EventHub Ethiopia is a comprehensive event management platform that allows users to discover, create, manage, and purchase tickets for events across Ethiopia. The platform features a modern UI, real-time search, location-based filtering, payment integration via Chapa, and image management through Cloudinary.
+EventHub Ethiopia is a comprehensive event management platform that allows users to discover, create, manage, and purchase tickets for events across Ethiopia. The platform features a modern UI, real-time search, location-based filtering, integrated payment processing, and cloud-based image management.
 
 **Key Highlights:**
 - 🔐 JWT-based authentication with secure password hashing
 - 🗺️ Interactive map-based location selection and event browsing
-- 🏷️ Tag-based event categorization and search
-- 💳 Integrated Chapa payment gateway for ticket purchases
-- 📸 Multi-image upload with Cloudinary integration
+- 🏷️ Tag-based event categorization and full-text search
+- 💳 Integrated payment gateway for ticket purchases
+- 📸 Multi-image upload with cloud storage
 - 🔍 Full-text search with PostgreSQL
 - 📱 Fully responsive mobile-first design
 - ⚡ Real-time GraphQL API via Hasura
@@ -71,7 +71,7 @@ EventHub Ethiopia is a comprehensive event management platform that allows users
 ### Backend
 - **Language:** Golang 1.22+
 - **GraphQL Engine:** Hasura
-- **Database:** PostgreSQL 15+
+- **Database:** PostgreSQL 15+ (supports Neon serverless)
 - **Authentication:** JWT with bcrypt
 - **File Storage:** Cloudinary
 - **Payment Gateway:** Chapa API
@@ -85,9 +85,10 @@ EventHub Ethiopia is a comprehensive event management platform that allows users
 - **Maps:** Leaflet
 - **State Management:** Vue Composition API
 
-### DevOps
-- **Containerization:** Docker & Docker Compose
-- **Version Control:** Git
+### Infrastructure
+- **Database:** PostgreSQL 15+ / Neon (serverless)
+- **GraphQL Engine:** Hasura (self-hosted or cloud)
+- **Containerization:** Docker & Docker Compose (optional)
 
 ---
 
@@ -132,14 +133,21 @@ event-management/
 
 Before you begin, ensure you have the following installed:
 
-- **Docker & Docker Compose** (v20.10+)
-- **Node.js** (v18+ for frontend development)
-- **Go** (v1.22+ for backend development)
+- **Docker & Docker Compose** (v20.10+) - For containerized setup
+- **Node.js** (v18+) - For frontend development
+- **Go** (v1.22+) - For backend development
+- **PostgreSQL** (v15+) - For database (or use Neon serverless)
 - **Git**
 
 ### External Services (Required)
-- **Cloudinary Account** - [Sign up here](https://cloudinary.com/)
-- **Chapa Account** - [Sign up here](https://chapa.co/)
+- **Cloudinary Account** - For image storage ([Sign up](https://cloudinary.com/))
+- **Chapa Account** - For payment processing ([Sign up](https://chapa.co/))
+
+---
+
+## 🌐 Demo
+
+A live demo of the application is available for testing purposes.
 
 ---
 
@@ -188,24 +196,24 @@ npm install
 
 ### Backend Environment Variables
 
-Edit `backend/.env`:
+Create `backend/.env`:
 
 ```env
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/events_db
+DATABASE_URL=postgresql://user:password@host:port/dbname
 
-# Cloudinary
+# Cloudinary (Image Storage)
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
-# Chapa
+# Chapa (Payment Gateway)
 CHAPA_SECRET_KEY=your-chapa-secret-key
 CHAPA_PUBLIC_KEY=your-chapa-public-key
-CHAPA_CALLBACK_URL=http://localhost:3001/api/payment/callback
+CHAPA_CALLBACK_URL=http://localhost:3001/webhook/chapa
 CHAPA_RETURN_URL=http://localhost:3000/payment/success
 
-# JWT
+# JWT Authentication
 JWT_SECRET=your-super-secret-jwt-key-min-32-characters-long
 
 # Hasura
@@ -218,16 +226,25 @@ PORT=3001
 
 ### Frontend Environment Variables
 
-Edit `frontend/.env`:
+Create `frontend/.env` (local development):
 
 ```env
-BACKEND_URL=http://localhost:3001
-HASURA_GRAPHQL_URL=http://localhost:8080/v1/graphql
+NUXT_PUBLIC_BACKEND_URL=http://localhost:3001
+NUXT_PUBLIC_GRAPHQL_ENDPOINT=http://localhost:8080/v1/graphql
+```
+
+For production, create `frontend/.env.production`:
+
+```env
+NUXT_PUBLIC_BACKEND_URL=https://your-backend-domain.com
+NUXT_PUBLIC_GRAPHQL_ENDPOINT=https://your-hasura-domain.com/v1/graphql
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Development)
+
+### Using Docker (Recommended for Local Dev)
 
 ```bash
 # 1. Setup environment
@@ -235,253 +252,272 @@ cp .env.example .env
 # Edit .env with your Cloudinary and Chapa credentials
 
 # 2. Start everything
-make build
-make up
+docker-compose up -d
 
 # 3. Run migrations
-make migrate
+# Connect to your PostgreSQL and run migrations 001-012
 ```
 
-**Done! Access:**
+**Access:**
 - Frontend: http://localhost:3000
 - Backend: http://localhost:3001
-- Hasura: http://localhost:8080/console (password in .env)
+- Hasura: http://localhost:8080/console
+- PostgreSQL: localhost:5432
 
-**Commands:**
+### Manual Setup (Without Docker)
+
+**Backend:**
 ```bash
-make logs    # View logs
-make down    # Stop
-make clean   # Remove everything
+cd backend
+cp .env.example .env
+# Edit .env with your credentials
+go mod download
+go run cmd/main.go
 ```
+
+**Frontend:**
+```bash
+cd frontend
+cp .env.example .env
+# Edit .env
+npm install
+npm run dev
+```
+
+**Database:**
+- Install PostgreSQL locally or use Neon (serverless)
+- Run all migrations (001-012)
+- Seed categories if needed
 
 ---
 
 ## 🗄️ Database Migrations
 
-### Apply Migrations
+### Applying Migrations
+
+Run all migrations in order (001-012):
 
 ```bash
 cd backend/migrations
 
-# Using psql
-psql -U postgres -d events_db -f 001_create_users.sql
-psql -U postgres -d events_db -f 002_create_categories.sql
-psql -U postgres -d events_db -f 003_create_events.sql
-psql -U postgres -d events_db -f 004_create_event_images.sql
-psql -U postgres -d events_db -f 005_create_tags.sql
-psql -U postgres -d events_db -f 006_create_bookmarks_follows.sql
-psql -U postgres -d events_db -f 007_create_tickets.sql
-psql -U postgres -d events_db -f 008_create_functions.sql
-psql -U postgres -d events_db -f 009_create_triggers.sql
+# Connect to your PostgreSQL database
+psql "your-connection-string" -f 001_create_users.sql
+psql "your-connection-string" -f 002_create_categories.sql
+psql "your-connection-string" -f 003_create_events.sql
+psql "your-connection-string" -f 004_create_event_images.sql
+psql "your-connection-string" -f 005_create_tags.sql
+psql "your-connection-string" -f 006_create_bookmarks_follows.sql
+psql "your-connection-string" -f 007_create_tickets.sql
+psql "your-connection-string" -f 008_create_functions.sql
+psql "your-connection-string" -f 009_create_triggers.sql
+psql "your-connection-string" -f 010_add_computed_and_generated_fields.sql
+psql "your-connection-string" -f 011_add_hasura_computed_fields.sql
+psql "your-connection-string" -f 012_fix_search_vector_conflict.sql
 
 # Or apply all at once
-cat *.sql | psql -U postgres -d events_db
+cat *.sql | psql "your-connection-string"
 ```
+
+> **Important:** Migration 012 is required for tag-based search functionality.
 
 ### Database Schema Overview
 
 **Core Tables:**
-- `users` - User accounts
-- `categories` - Event categories (dynamic CRUD)
-- `events` - Event information
-- `event_images` - Multiple images per event
-- `tags` - Reusable tags
-- `event_tags` - Many-to-many relationship
-- `bookmarks` - User bookmarks
-- `follows` - User follows
-- `tickets` - Ticket templates
-- `orders` - Ticket purchases
+- `users` - User accounts with JWT authentication
+- `categories` - Event categories (dynamic CRUD via Hasura)
+- `events` - Event information with slug-based URLs
+- `event_images` - Multiple images per event (up to 5, stored in Cloudinary)
+- `tags` - Reusable tags for categorization
+- `event_tags` - Many-to-many relationship between events and tags
+- `bookmarks` - User bookmarks for events
+- `follows` - User follows for events
+- `tickets` - Ticket templates with pricing and availability
+- `orders` - Ticket purchases via Chapa payment gateway
 
 **PostgreSQL Features:**
-- ✅ Full-text search with generated `search_vector`
+- ✅ Full-text search with `search_vector` (includes tags via function)
+- ✅ Slug generation for SEO-friendly URLs
 - ✅ Triggers for auto-updating timestamps
 - ✅ Functions for complex queries (search, nearby events)
 - ✅ Proper indexes on FK and search columns
+- ✅ Materialized view for optimized tag-based search
+
+**Important Notes:**
+- `search_vector` is a GENERATED column (cannot be manually updated)
+- Tag search is handled via `get_event_tags_tsvector()` function
+- Use `search_events_with_tags()` function for full search including tags
 
 ---
 
 ## 📚 API Documentation
 
-### Hasura Actions (Golang Endpoints)
+### Hasura Actions (Backend Endpoints)
 
-#### Authentication
+The backend provides these custom actions via Hasura:
 
-**Signup**
-```graphql
-mutation Signup($input: SignupInput!) {
-  signup(input: $input) {
-    access_token
-    user {
-      id
-      email
-      full_name
-    }
-  }
-}
-```
+**Authentication**
+- `signup` - User registration with email/password
+- `login` - User authentication with JWT token generation
 
-**Login**
-```graphql
-mutation Login($input: LoginInput!) {
-  login(input: $input) {
-    access_token
-    user {
-      id
-      email
-      full_name
-    }
-  }
-}
-```
+**File Management**
+- `upload` - Upload multiple images (max 5, 5MB each)
+- `delete-files` - Delete images from cloud storage
 
-#### File Upload
+**Payment**
+- `initiate-payment` - Initialize payment gateway checkout
+- `verify-payment` - Verify payment status and create order
 
-**Upload Images**
-```bash
-POST /api/upload
-Content-Type: multipart/form-data
-Authorization: Bearer <token>
+### GraphQL API
 
-files: [File, File, ...]
-user_id: uuid
-event_id: uuid
-```
+All data operations use standard Hasura GraphQL queries and mutations:
 
-#### Payment
+**Events**
+- Query events with filtering, sorting, pagination
+- Create, update, delete events
+- Search events by title, description, and tags
+- Filter by category, date, location
 
-**Initialize Payment**
-```bash
-POST /api/payment/initialize
-Authorization: Bearer <token>
+**Tags**
+- Create tags with automatic deduplication
+- Link tags to events with conflict handling
 
-{
-  "event_id": "uuid",
-  "quantity": 1,
-  "user_email": "user@example.com",
-  "user_name": "John Doe"
-}
-```
+**Orders & Tickets**
+- Query user tickets and orders
+- Track ticket availability
+- View order history
 
-**Payment Callback**
-```bash
-POST /api/payment/callback
-
-{
-  "tx_ref": "string",
-  "status": "success"
-}
-```
-
-### GraphQL Queries
-
-All other operations use standard Hasura GraphQL queries:
-
-```graphql
-# Get Events
-query GetEvents {
-  events(order_by: { event_date: asc }) {
-    id
-    title
-    description
-    venue
-    price
-    event_date
-    category { name }
-    event_images { url is_featured }
-    event_tags { tag { name } }
-  }
-}
-
-# Search Events
-query SearchEvents($search_term: String!) {
-  search_events(args: { search_term: $search_term }) {
-    id
-    title
-    description
-  }
-}
-
-# Get Nearby Events
-query GetNearbyEvents($lat: numeric!, $lng: numeric!, $radius_km: numeric!) {
-  get_nearby_events(args: { lat: $lat, lng: $lng, radius_km: $radius_km }) {
-    event_id
-    distance_km
-  }
-}
-```
+Refer to Hasura GraphQL schema for complete API documentation.
 
 ---
 
 ## 🚢 Deployment
 
+### Deployment Options
+
+The application can be deployed using various platforms:
+
+**Recommended Stack:**
+- **Frontend:** Vercel, Netlify, or similar serverless platforms
+- **Backend:** Render, Railway, Heroku, or any Go-compatible hosting
+- **Database:** Neon (serverless PostgreSQL), AWS RDS, or self-hosted PostgreSQL
+- **Hasura:** Hasura Cloud or self-hosted
+
+### General Deployment Steps
+
+1. **Database Setup**
+   - Create PostgreSQL instance (cloud or self-hosted)
+   - Run all migrations (001-012)
+   - Seed initial data (categories)
+
+2. **Hasura Setup**
+   - Deploy Hasura instance (cloud or self-hosted)
+   - Connect to database
+   - Set `HASURA_GRAPHQL_UNAUTHORIZED_ROLE=anonymous`
+   - Track all tables and relationships
+   - Configure permissions for `anonymous` and `user` roles
+   - Add computed fields: `tickets_remaining`, `is_sold_out`, `event_status`, `attendee_count`
+   - Configure Hasura Actions pointing to backend endpoints
+
+3. **Backend Deployment**
+   - Build: `go build -o main cmd/main.go`
+   - Configure all environment variables
+   - Ensure CORS is properly configured
+   - Deploy binary or use native Go runtime
+
+4. **Frontend Deployment**
+   - Build: `npm run build`
+   - Set production environment variables
+   - Deploy build output
+
+### Hasura Actions Configuration
+
+Configure these actions in Hasura Console pointing to your backend:
+
+```yaml
+- name: signup
+  endpoint: https://your-backend/actions/signup
+  
+- name: login
+  endpoint: https://your-backend/actions/login
+  
+- name: initiate_payment
+  endpoint: https://your-backend/actions/initiate-payment
+  
+- name: verify_payment
+  endpoint: https://your-backend/actions/verify-payment
+```
+
 ### Production Checklist
 
-- [ ] Update environment variables for production URLs
-- [ ] Set strong JWT secret (32+ characters)
-- [ ] Configure HTTPS/SSL
-- [ ] Set up Cloudinary production account
-- [ ] Set up Chapa production keys
-- [ ] Configure Hasura permissions
-- [ ] Set up database backups
-- [ ] Configure monitoring (logs, errors)
-- [ ] Set up CDN for static assets
-- [ ] Enable rate limiting
-- [ ] Review security headers
-
-### Docker Production Build
-
-```bash
-# Build images
-docker-compose -f docker-compose.prod.yml build
-
-# Start services
-docker-compose -f docker-compose.prod.yml up -d
-
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f
-```
-
-### Frontend Production Build
-
-```bash
-cd frontend
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Or deploy to Vercel/Netlify
-# Follow their deployment guides
-```
+- [ ] All 12 database migrations applied
+- [ ] Environment variables configured for all services
+- [ ] Hasura connected to database
+- [ ] Hasura permissions configured
+- [ ] Backend endpoints accessible
+- [ ] Frontend environment variables set
+- [ ] CORS properly configured
+- [ ] SSL/HTTPS enabled
+- [ ] Payment gateway keys (production mode)
+- [ ] Image storage configured
+- [ ] Database backups enabled
 
 ---
 
 ## 🧪 Testing
+
+### Manual Testing Checklist
+
+**Authentication:**
+- [x] User signup with email validation
+- [x] User login with JWT token
+- [x] Protected routes redirect to login
+- [x] Token persistence across sessions
+
+**Event Management:**
+- [x] Create event with multiple images
+- [x] Create event with tags
+- [x] Edit event and update images
+- [x] Delete event images
+- [x] Set featured image
+- [x] Slug-based URLs work correctly
+- [x] Events display on homepage
+- [x] Event detail page shows all information
+
+**Search & Filter:**
+- [x] Search by title and description
+- [x] Search includes tags (via migration 012)
+- [x] Filter by category
+- [x] Filter by date range
+- [x] Filter by price
+- [x] Map view displays events
+- [x] Location-based filtering
+
+**Payment Flow:**
+- [x] Ticket purchase initiates Chapa payment
+- [x] Redirect to Chapa checkout
+- [x] Return to success page after payment
+- [x] Payment verification works (not localhost)
+- [x] Tickets appear in dashboard
+- [x] Order history is accurate
+
+**UI/UX:**
+- [x] Mobile responsive design
+- [x] Loading states for all async operations
+- [x] Error messages are user-friendly
+- [x] Image previews work correctly
+- [x] Map picker functions properly
+
+### Automated Testing (Future)
 
 ```bash
 # Backend tests
 cd backend
 go test ./...
 
-# Frontend tests (if configured)
+# Frontend tests
 cd frontend
 npm run test
 ```
-
-### Manual Testing Checklist
-
-- [ ] User signup and login
-- [ ] Create event with images
-- [ ] Edit and delete events
-- [ ] Search and filter events
-- [ ] Map view and location picker
-- [ ] Bookmark and follow events
-- [ ] Purchase tickets
-- [ ] View dashboard
-- [ ] Admin category management
-- [ ] Mobile responsiveness
 
 ---
 
@@ -491,6 +527,35 @@ npm run test
 - **Compliance Summary:** `COMPLIANCE_SUMMARY.md`
 - **Phase Completion:** `PROJECT_COMPLETE.md`
 - **Gap Fixes:** `GAPS_FIXED_SUMMARY.txt`
+
+---
+
+## 🔧 Recent Updates & Fixes
+
+### Key Improvements
+
+**Database & Search**
+- Fixed conflict between GENERATED columns and triggers (Migration 012)
+- Tag-based search now works correctly
+- Optimized search performance with materialized views
+
+**Code Quality**
+- Removed debug console.log statements
+- Improved error handling with user-friendly messages
+- Cleaned up unused code and handlers
+
+**Features**
+- Implemented SEO-friendly slug-based URLs for events
+- Fixed payment verification to use environment variables
+- Added graceful error handling for optional operations
+
+### Architecture Decisions
+
+**Why GENERATED Columns?**
+The `search_vector` column uses PostgreSQL's GENERATED ALWAYS constraint to automatically index event titles and descriptions. Tags are indexed separately via a function to avoid conflicts.
+
+**Why Separate Tag Search?**
+Tags are dynamic and can change frequently. Using a separate function (`get_event_tags_tsvector()`) combined with a materialized view provides flexibility and performance.
 
 ---
 
@@ -516,32 +581,83 @@ Contributions are welcome! Please follow these steps:
 
 ### Common Issues
 
-**Hasura not connecting to database:**
+**Database Connection Issues:**
+```bash
+# Verify database is accessible
+psql "your-connection-string"
+
+# Check connection string format
+# Format: postgresql://user:password@host:port/database
+```
+
+**GraphQL/Hasura Errors:**
+```bash
+# Verify Hasura is accessible
+curl https://your-hasura-url/healthz
+
+# Check Hasura permissions
+# Ensure 'anonymous' and 'user' roles are configured
+```
+
+**Image Upload Failing:**
+- Verify Cloudinary credentials in environment variables
+- Check file size limits (max 5MB per image, max 5 images per event)
+- Ensure `event_id` is included in upload request
+- Verify CORS is enabled on backend
+
+**Payment Issues:**
+- Verify payment gateway API keys
+- Check callback URL is publicly accessible
+- Ensure return URL points to correct frontend domain
+- Verify environment variables use correct domains (not localhost in production)
+
+**Tag Creation Errors:**
+- Ensure migration 012 is applied
+- Verify `on_conflict` clause in tag mutations
+- Check Hasura permissions for `event_tags` table
+
+**Slug-Based URLs Not Working:**
+- Ensure migrations 010 and 011 are applied
+- Verify slugs are auto-generated on event creation
+- Check routing uses `slug` field instead of `id`
+
+### Local Development Issues
+
+**Backend Won't Start:**
+```bash
+# Verify Go version
+go version  # Should be 1.22+
+
+# Check dependencies
+go mod tidy
+
+# Verify environment variables
+cat backend/.env
+```
+
+**Frontend Build Errors:**
+```bash
+# Clear cache
+rm -rf node_modules .nuxt
+
+# Reinstall dependencies
+npm install
+
+# Check Node version
+node --version  # Should be 18+
+```
+
+**Docker Issues:**
 ```bash
 # Check Docker services
 docker-compose ps
 
 # Restart services
-docker-compose restart postgres hasura
+docker-compose restart
+
+# View logs
+docker-compose logs -f
 ```
-
-**Frontend GraphQL errors:**
-```bash
-# Verify Hasura is running
-curl http://localhost:8080/healthz
-
-# Check environment variables
-cat frontend/.env
-```
-
-**Image upload failing:**
-- Verify Cloudinary credentials in `backend/.env`
-- Check file size limits (max 5MB per image)
-
-**Payment not working:**
-- Verify Chapa API keys
-- Check callback URL is accessible
-- Review Chapa dashboard for errors
 
 ---
 
@@ -569,7 +685,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email https://t.me/Temuab21 or open an issue in the repository.
+For issues, questions, or contributions:
+- Open an issue in the repository
+- Contact: https://t.me/Temuab21
 
 ---
 

@@ -404,32 +404,35 @@ const onSubmit = handleSubmit(async (values) => {
   loading.value = true
   serverError.value = ''
 
-  let eventData: any = {}
-
   try {
     let uploadedFiles = []
 
-    // 1. Upload images (optional)
+    // 1. Upload images if provided
     if (selectedFiles.value.length > 0) {
-      const formData = new FormData()
-      selectedFiles.value.forEach(file => {
-        formData.append('files', file)
-      })
-      formData.append('event_id', 'temp')
+      try {
+        const formData = new FormData()
+        selectedFiles.value.forEach(file => {
+          formData.append('files', file)
+        })
+        formData.append('event_id', 'temp')
 
-      const uploadResponse = await $fetch(`${config.public.backendUrl}/actions/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${useCookie('auth_token').value}`,
-        },
-        body: formData,
-      })
+        const uploadResponse = await $fetch(`${config.public.backendUrl}/actions/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${useCookie('auth_token').value}`,
+          },
+          body: formData,
+        })
 
-      uploadedFiles = uploadResponse.files
+        uploadedFiles = uploadResponse.files
+      } catch (uploadError: any) {
+        serverError.value = 'Failed to upload images. Please try again.'
+        return
+      }
     }
 
-    // 2. Create event
-    eventData = {
+    // 2. Prepare event data
+    const eventData: any = {
       title: values.title,
       description: values.description || '',
       venue: values.venue,
@@ -441,11 +444,9 @@ const onSubmit = handleSubmit(async (values) => {
       category_id: values.categoryId,
     }
 
-    // Add images only if uploaded
+    // Add images if uploaded
     if (uploadedFiles.length > 0) {
-      // Find which preview was marked as featured
       const featuredIndex = imagePreviews.value.findIndex(p => p.isFeatured)
-      
       eventData.event_images = {
         data: uploadedFiles.map((file: any, index: number) => ({
           url: file.url,
@@ -454,54 +455,49 @@ const onSubmit = handleSubmit(async (values) => {
         })),
       }
     }
-
-    // Tags will be handled separately after event creation
-    console.log('Event data being sent:', JSON.stringify(eventData, null, 2))
     
+    // 3. Create event
     const result = await createEventMutation({ object: eventData })
 
-    if (result?.data?.insert_events_one) {
-      const eventId = result.data.insert_events_one.id
-      
-      // 3. Link tags to event (if any)
-      if (tags.value.length > 0) {
-        try {
-          // First insert/get tags
-          const tagsData = tags.value.map(tagName => ({ name: tagName }))
-          const tagsResult = await insertTagsMutation({ tags: tagsData })
-          
-          if (tagsResult?.data?.insert_tags?.returning) {
-            const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
-            
-            // Then link them to event
-            if (tagIds.length > 0) {
-              await createEventTagsMutation({
-                objects: tagIds.map(tagId => ({
-                  event_id: eventId,
-                  tag_id: tagId
-                }))
-              })
-            }
-          }
-        } catch (tagError) {
-          console.error('Failed to link tags, but event created:', tagError)
-          // Don't fail the whole operation, tags are optional
-        }
-      }
-      
-      // 4. Create ticket for the event
-      await createTicketMutation({
-        event_id: eventId,
-        price: values.price,
-        quantity_total: values.ticketQuantity
-      })
-      
-      navigateTo('/dashboard')
+    if (!result?.data?.insert_events_one) {
+      throw new Error('Failed to create event')
     }
+
+    const eventId = result.data.insert_events_one.id
+    
+    // 4. Link tags if provided
+    if (tags.value.length > 0) {
+      try {
+        const tagsData = tags.value.map(tagName => ({ name: tagName }))
+        const tagsResult = await insertTagsMutation({ tags: tagsData })
+        
+        if (tagsResult?.data?.insert_tags?.returning) {
+          const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
+          
+          if (tagIds.length > 0) {
+            await createEventTagsMutation({
+              objects: tagIds.map(tagId => ({
+                event_id: eventId,
+                tag_id: tagId
+              }))
+            })
+          }
+        }
+      } catch (tagError) {
+        // Tags are optional, continue even if they fail
+      }
+    }
+    
+    // 5. Create ticket
+    await createTicketMutation({
+      event_id: eventId,
+      price: values.price,
+      quantity_total: values.ticketQuantity
+    })
+    
+    navigateTo('/dashboard')
   } catch (err: any) {
-    console.error('Create event error:', err)
-    console.error('Event data:', eventData)
-    serverError.value = err.message || err.data?.error || 'Failed to create event'
+    serverError.value = err.message || 'Failed to create event. Please try again.'
   } finally {
     loading.value = false
   }

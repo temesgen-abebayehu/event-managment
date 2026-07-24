@@ -99,19 +99,13 @@ const formatPrice = (price: number) => {
 
 // Verify payment on mount
 onMounted(async () => {
-  // First check URL query params (Chapa might add them)
   let txRef = route.query.tx_ref || route.query.trx_ref || route.query.txRef || route.query.transaction_id
   
-  // If not in URL, check localStorage (our fallback)
   if (!txRef) {
     txRef = localStorage.getItem('pending_tx_ref')
-    console.log('Retrieved tx_ref from localStorage:', txRef)
-  } else {
-    console.log('Found tx_ref in URL:', txRef)
   }
   
   if (!txRef) {
-    // Check if there's a tx_ref in the URL hash
     const hash = window.location.hash
     const hashParams = new URLSearchParams(hash.substring(1))
     const hashTxRef = hashParams.get('tx_ref') || hashParams.get('trx_ref')
@@ -121,15 +115,12 @@ onMounted(async () => {
       return
     }
     
-    // No transaction reference found anywhere
-    console.error('No transaction reference found')
     error.value = true
     errorMessage.value = 'Unable to verify payment. Please check "My Tickets" to confirm your order status, or contact support if you were charged.'
     verifying.value = false
     return
   }
 
-  // Clean up localStorage after retrieving
   localStorage.removeItem('pending_tx_ref')
   localStorage.removeItem('pending_order_id')
   
@@ -137,10 +128,7 @@ onMounted(async () => {
 })
 
 async function verifyPayment(txRef: string) {
-  console.log('Verifying payment for tx_ref:', txRef)
-  
   try {
-    // Call backend to verify payment with Chapa
     const response = await fetch('http://localhost:3001/actions/verify-payment', {
       method: 'POST',
       headers: {
@@ -154,13 +142,10 @@ async function verifyPayment(txRef: string) {
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('Verification failed:', errorData)
       throw new Error('Failed to verify payment')
     }
 
     const data = await response.json()
-    console.log('Verification response:', data)
     
     if (data.status === 'completed') {
       verified.value = true
@@ -170,7 +155,6 @@ async function verifyPayment(txRef: string) {
       errorMessage.value = 'Payment was not successful. Please try again or contact support.'
     }
   } catch (err) {
-    console.error('Payment verification error:', err)
     error.value = true
     errorMessage.value = 'Unable to verify payment. Please check "My Tickets" to confirm your order status.'
   } finally {

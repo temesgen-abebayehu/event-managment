@@ -448,7 +448,6 @@ const handleDeleteImage = async () => {
 
   deletingImage.value = true
   try {
-    // Delete from Cloudinary first
     await $fetch(`${config.public.backendUrl}/actions/delete-files`, {
       method: 'POST',
       headers: {
@@ -461,16 +460,13 @@ const handleDeleteImage = async () => {
       }
     })
 
-    // Delete from database
     await deleteImageMutation({ id: imageToDelete.value.id })
     
     showDeleteImageModal.value = false
     imageToDelete.value = null
-    
-    // Refetch event to update UI
     await refetch()
   } catch (err) {
-    error.value = 'Failed to delete image'
+    error.value = 'Failed to delete image. Please try again.'
   } finally {
     deletingImage.value = false
   }
@@ -484,7 +480,7 @@ const setFeaturedImage = async (imageId: string) => {
     })
     await refetch()
   } catch (err) {
-    error.value = 'Failed to set featured image'
+    error.value = 'Failed to set featured image. Please try again.'
   }
 }
 
@@ -493,43 +489,45 @@ const handleSubmit = async () => {
   error.value = ''
 
   try {
-    // Update event details
     await updateEventMutation({
       id: eventId.value,
       set: form.value,
     })
 
-    // Upload new images if any
     if (newImagePreviews.value.length > 0) {
-      const formData = new FormData()
-      formData.append('event_id', eventId.value) // Add event_id
-      newImagePreviews.value.forEach(preview => {
-        formData.append('files', preview.file)
-      })
+      try {
+        const formData = new FormData()
+        formData.append('event_id', eventId.value)
+        newImagePreviews.value.forEach(preview => {
+          formData.append('files', preview.file)
+        })
 
-      const uploadResponse = await $fetch(`${config.public.backendUrl}/actions/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${useCookie('auth_token').value}`,
-        },
-        body: formData,
-      })
+        const uploadResponse = await $fetch(`${config.public.backendUrl}/actions/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${useCookie('auth_token').value}`,
+          },
+          body: formData,
+        })
 
-      // Insert image records - uploadResponse.files is the array
-      const imageObjects = uploadResponse.files.map((img: any, index: number) => ({
-        event_id: eventId.value,
-        url: img.url,
-        public_id: img.public_id,
-        is_featured: existingImages.value.length === 0 && index === 0, // First image is featured if no existing images
-      }))
+        const imageObjects = uploadResponse.files.map((img: any, index: number) => ({
+          event_id: eventId.value,
+          url: img.url,
+          public_id: img.public_id,
+          is_featured: existingImages.value.length === 0 && index === 0,
+        }))
 
-      await insertImagesMutation({ objects: imageObjects })
+        await insertImagesMutation({ objects: imageObjects })
+      } catch (uploadError) {
+        error.value = 'Event updated, but failed to upload new images.'
+        router.push('/dashboard')
+        return
+      }
     }
 
     router.push('/dashboard')
   } catch (err: any) {
-    error.value = 'Failed to update event'
-    console.error('Update error:', err)
+    error.value = 'Failed to update event. Please try again.'
   } finally {
     loading.value = false
   }

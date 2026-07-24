@@ -422,20 +422,7 @@ const onSubmit = handleSubmit(async (values) => {
       }
     }
 
-    if (tags.value.length > 0) {
-      eventData.event_tags = {
-        data: tags.value.map(tagName => ({
-          tag: {
-            data: { name: tagName },
-            on_conflict: {
-              constraint: 'tags_name_key',
-              update_columns: ['name'],
-            },
-          },
-        })),
-      }
-    }
-
+    // Tags will be handled separately after event creation
     console.log('Event data being sent:', JSON.stringify(eventData, null, 2))
     
     const result = await createEventMutation({ object: eventData })
@@ -443,7 +430,26 @@ const onSubmit = handleSubmit(async (values) => {
     if (result?.data?.insert_events_one) {
       const eventId = result.data.insert_events_one.id
       
-      // 3. Create ticket for the event
+      // 3. Link tags to event (if any)
+      if (tags.value.length > 0) {
+        // First insert/get tags
+        const tagsData = tags.value.map(tagName => ({ name: tagName }))
+        const tagsResult = await insertTagsMutation({ tags: tagsData })
+        
+        if (tagsResult?.data?.insert_tags?.returning) {
+          const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
+          
+          // Then link them to event
+          await createEventTagsMutation({
+            objects: tagIds.map(tagId => ({
+              event_id: eventId,
+              tag_id: tagId
+            }))
+          })
+        }
+      }
+      
+      // 4. Create ticket for the event
       await createTicketMutation({
         event_id: eventId,
         price: values.price,

@@ -352,6 +352,31 @@ const CREATE_EVENT = gql`
   }
 `
 
+const INSERT_TAGS = gql`
+  mutation InsertTags($tags: [tags_insert_input!]!) {
+    insert_tags(
+      objects: $tags
+      on_conflict: {
+        constraint: tags_name_key
+        update_columns: [name]
+      }
+    ) {
+      returning {
+        id
+        name
+      }
+    }
+  }
+`
+
+const CREATE_EVENT_TAGS = gql`
+  mutation CreateEventTags($objects: [event_tags_insert_input!]!) {
+    insert_event_tags(objects: $objects) {
+      affected_rows
+    }
+  }
+`
+
 const CREATE_TICKET = gql`
   mutation CreateTicket($event_id: uuid!, $price: numeric!, $quantity_total: Int!) {
     insert_tickets_one(object: {
@@ -365,6 +390,8 @@ const CREATE_TICKET = gql`
 `
 
 const { mutate: createEventMutation } = useMutation(CREATE_EVENT)
+const { mutate: insertTagsMutation } = useMutation(INSERT_TAGS)
+const { mutate: createEventTagsMutation } = useMutation(CREATE_EVENT_TAGS)
 const { mutate: createTicketMutation } = useMutation(CREATE_TICKET)
 
 const onSubmit = handleSubmit(async (values) => {
@@ -432,20 +459,27 @@ const onSubmit = handleSubmit(async (values) => {
       
       // 3. Link tags to event (if any)
       if (tags.value.length > 0) {
-        // First insert/get tags
-        const tagsData = tags.value.map(tagName => ({ name: tagName }))
-        const tagsResult = await insertTagsMutation({ tags: tagsData })
-        
-        if (tagsResult?.data?.insert_tags?.returning) {
-          const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
+        try {
+          // First insert/get tags
+          const tagsData = tags.value.map(tagName => ({ name: tagName }))
+          const tagsResult = await insertTagsMutation({ tags: tagsData })
           
-          // Then link them to event
-          await createEventTagsMutation({
-            objects: tagIds.map(tagId => ({
-              event_id: eventId,
-              tag_id: tagId
-            }))
-          })
+          if (tagsResult?.data?.insert_tags?.returning) {
+            const tagIds = tagsResult.data.insert_tags.returning.map((t: any) => t.id)
+            
+            // Then link them to event
+            if (tagIds.length > 0) {
+              await createEventTagsMutation({
+                objects: tagIds.map(tagId => ({
+                  event_id: eventId,
+                  tag_id: tagId
+                }))
+              })
+            }
+          }
+        } catch (tagError) {
+          console.error('Failed to link tags, but event created:', tagError)
+          // Don't fail the whole operation, tags are optional
         }
       }
       

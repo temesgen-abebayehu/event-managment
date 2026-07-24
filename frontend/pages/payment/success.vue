@@ -87,6 +87,7 @@ definePageMeta({
 useHead({ title: 'Payment Verification' })
 
 const route = useRoute()
+const config = useRuntimeConfig()
 const verifying = ref(true)
 const verified = ref(false)
 const error = ref(false)
@@ -97,7 +98,6 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-ET').format(price)
 }
 
-// Verify payment on mount
 onMounted(async () => {
   let txRef = route.query.tx_ref || route.query.trx_ref || route.query.txRef || route.query.transaction_id
   
@@ -129,7 +129,7 @@ onMounted(async () => {
 
 async function verifyPayment(txRef: string) {
   try {
-    const response = await fetch('http://localhost:3001/actions/verify-payment', {
+    const response = await fetch(`${config.public.backendUrl}/actions/verify-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

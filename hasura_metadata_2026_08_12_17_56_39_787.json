@@ -1,0 +1,1019 @@
+{
+  "resource_version": 13,
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [
+          {
+            "table": {
+              "name": "bookmarks",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "event",
+                "using": {
+                  "foreign_key_constraint_on": "event_id"
+                }
+              },
+              {
+                "name": "user",
+                "using": {
+                  "foreign_key_constraint_on": "user_id"
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "set": {
+                    "user_id": "X-Hasura-User-Id"
+                  },
+                  "columns": [
+                    "event_id"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "event_id",
+                    "user_id"
+                  ],
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "categories",
+              "schema": "public"
+            },
+            "array_relationships": [
+              {
+                "name": "events",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "category_id",
+                    "table": {
+                      "name": "events",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "id",
+                    "name",
+                    "slug"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "name",
+                    "slug",
+                    "id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "event_images",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "event",
+                "using": {
+                  "foreign_key_constraint_on": "event_id"
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "event": {
+                      "user_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    }
+                  },
+                  "columns": [
+                    "event_id",
+                    "is_featured",
+                    "public_id",
+                    "url"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "is_featured",
+                    "public_id",
+                    "url",
+                    "event_id",
+                    "id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "is_featured",
+                    "public_id",
+                    "url",
+                    "event_id",
+                    "id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "is_featured"
+                  ],
+                  "filter": {
+                    "event": {
+                      "user_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    }
+                  },
+                  "check": null
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "event_tags",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "event",
+                "using": {
+                  "foreign_key_constraint_on": "event_id"
+                }
+              },
+              {
+                "name": "tag",
+                "using": {
+                  "foreign_key_constraint_on": "tag_id"
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {},
+                  "columns": [
+                    "event_id",
+                    "tag_id"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "event_id",
+                    "tag_id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "event_id",
+                    "tag_id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "event": {
+                      "user_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "events",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "category",
+                "using": {
+                  "foreign_key_constraint_on": "category_id"
+                }
+              },
+              {
+                "name": "user",
+                "using": {
+                  "foreign_key_constraint_on": "user_id"
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "bookmarks",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "event_id",
+                    "table": {
+                      "name": "bookmarks",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "event_images",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "event_id",
+                    "table": {
+                      "name": "event_images",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "event_tags",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "event_id",
+                    "table": {
+                      "name": "event_tags",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "follows",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "event_id",
+                    "table": {
+                      "name": "follows",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "tickets",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "event_id",
+                    "table": {
+                      "name": "tickets",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "computed_fields": [
+              {
+                "name": "attendee_count",
+                "definition": {
+                  "function": {
+                    "name": "event_attendee_count",
+                    "schema": "public"
+                  }
+                }
+              },
+              {
+                "name": "event_status",
+                "definition": {
+                  "function": {
+                    "name": "event_status",
+                    "schema": "public"
+                  }
+                }
+              },
+              {
+                "name": "is_sold_out",
+                "definition": {
+                  "function": {
+                    "name": "event_is_sold_out",
+                    "schema": "public"
+                  }
+                }
+              },
+              {
+                "name": "tickets_remaining",
+                "definition": {
+                  "function": {
+                    "name": "event_tickets_remaining",
+                    "schema": "public"
+                  }
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "set": {
+                    "user_id": "X-Hasura-User-Id"
+                  },
+                  "columns": [
+                    "address",
+                    "category_id",
+                    "description",
+                    "event_date",
+                    "latitude",
+                    "longitude",
+                    "price",
+                    "title",
+                    "venue"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "title",
+                    "venue",
+                    "latitude",
+                    "longitude",
+                    "price",
+                    "address",
+                    "description",
+                    "slug",
+                    "created_at",
+                    "event_date",
+                    "updated_at",
+                    "search_vector",
+                    "category_id",
+                    "id",
+                    "user_id"
+                  ],
+                  "computed_fields": [
+                    "attendee_count",
+                    "event_status",
+                    "is_sold_out",
+                    "tickets_remaining"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "title",
+                    "venue",
+                    "latitude",
+                    "longitude",
+                    "price",
+                    "address",
+                    "description",
+                    "slug",
+                    "created_at",
+                    "event_date",
+                    "updated_at",
+                    "search_vector",
+                    "category_id",
+                    "id",
+                    "user_id"
+                  ],
+                  "computed_fields": [
+                    "attendee_count",
+                    "event_status",
+                    "is_sold_out",
+                    "tickets_remaining"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "address",
+                    "category_id",
+                    "description",
+                    "event_date",
+                    "latitude",
+                    "longitude",
+                    "price",
+                    "title",
+                    "venue"
+                  ],
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "check": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "events_with_status",
+              "schema": "public"
+            }
+          },
+          {
+            "table": {
+              "name": "follows",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "event",
+                "using": {
+                  "foreign_key_constraint_on": "event_id"
+                }
+              },
+              {
+                "name": "user",
+                "using": {
+                  "foreign_key_constraint_on": "user_id"
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "set": {
+                    "user_id": "X-Hasura-User-Id"
+                  },
+                  "columns": [
+                    "event_id"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "event_id",
+                    "user_id"
+                  ],
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "orders",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "ticket",
+                "using": {
+                  "foreign_key_constraint_on": "ticket_id"
+                }
+              },
+              {
+                "name": "user",
+                "using": {
+                  "foreign_key_constraint_on": "user_id"
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "set": {
+                    "user_id": "X-Hasura-User-Id"
+                  },
+                  "columns": [
+                    "chapa_tx_ref",
+                    "quantity",
+                    "ticket_id",
+                    "total_price"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "chapa_tx_ref",
+                    "status",
+                    "quantity",
+                    "total_price",
+                    "created_at",
+                    "id",
+                    "ticket_id",
+                    "user_id"
+                  ],
+                  "filter": {
+                    "user_id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "tags",
+              "schema": "public"
+            },
+            "array_relationships": [
+              {
+                "name": "event_tags",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "tag_id",
+                    "table": {
+                      "name": "event_tags",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {},
+                  "columns": [
+                    "name",
+                    "id"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "name",
+                    "id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "name",
+                    "id"
+                  ],
+                  "filter": {},
+                  "allow_aggregations": true
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "name"
+                  ],
+                  "filter": {},
+                  "check": null
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "tickets",
+              "schema": "public"
+            },
+            "object_relationships": [
+              {
+                "name": "event",
+                "using": {
+                  "foreign_key_constraint_on": "event_id"
+                }
+              }
+            ],
+            "array_relationships": [
+              {
+                "name": "orders",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "ticket_id",
+                    "table": {
+                      "name": "orders",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "insert_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "check": {
+                    "event": {
+                      "user_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    }
+                  },
+                  "columns": [
+                    "event_id",
+                    "price",
+                    "quantity_total"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "quantity_sold",
+                    "quantity_total",
+                    "price",
+                    "event_id",
+                    "id"
+                  ],
+                  "filter": {}
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "quantity_sold",
+                    "quantity_total",
+                    "price",
+                    "event_id",
+                    "id"
+                  ],
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "price",
+                    "quantity_total"
+                  ],
+                  "filter": {
+                    "event": {
+                      "user_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    }
+                  },
+                  "check": null
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "filter": {
+                    "event": {
+                      "user_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    }
+                  }
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "users",
+              "schema": "public"
+            },
+            "array_relationships": [
+              {
+                "name": "bookmarks",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "user_id",
+                    "table": {
+                      "name": "bookmarks",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "events",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "user_id",
+                    "table": {
+                      "name": "events",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "follows",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "user_id",
+                    "table": {
+                      "name": "follows",
+                      "schema": "public"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "orders",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "user_id",
+                    "table": {
+                      "name": "orders",
+                      "schema": "public"
+                    }
+                  }
+                }
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "anonymous",
+                "permission": {
+                  "columns": [
+                    "avatar_url",
+                    "full_name",
+                    "id"
+                  ],
+                  "filter": {}
+                },
+                "comment": ""
+              },
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "avatar_url",
+                    "created_at",
+                    "email",
+                    "full_name",
+                    "id",
+                    "phone"
+                  ],
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "user",
+                "permission": {
+                  "columns": [
+                    "avatar_url",
+                    "email",
+                    "full_name",
+                    "phone"
+                  ],
+                  "filter": {
+                    "id": {
+                      "_eq": "X-Hasura-User-Id"
+                    }
+                  },
+                  "check": null
+                },
+                "comment": ""
+              }
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "function": {
+              "name": "search_events",
+              "schema": "public"
+            }
+          },
+          {
+            "function": {
+              "name": "search_events_with_tags",
+              "schema": "public"
+            }
+          }
+        ],
+        "configuration": {
+          "connection_info": {
+            "database_url": "postgresql://neon-username:password@ep-green-glitter-axgk1244-pooler.c-4.us-east-2.aws.neon.tech/eventhub?sslmode=require&channel_binding=require",
+            "isolation_level": "read-committed",
+            "pool_settings": {
+              "connection_lifetime": 600,
+              "idle_timeout": 180,
+              "max_connections": 50,
+              "retries": 1
+            },
+            "use_prepared_statements": true
+          }
+        }
+      }
+    ]
+  }
+}
